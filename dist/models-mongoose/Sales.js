@@ -67,7 +67,7 @@ const saleSchema = new mongoose_1.Schema({
     ],
     paymentMethod: {
         type: String,
-        enum: ['cash', 'card'],
+        enum: ['cash', 'credit'],
         required: true,
     },
     paymentReference: {

@@ -85,10 +85,10 @@ const createSale = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         // Agregar la venta a la caja
         cashRegister.sales.push(savedSale._id);
         yield cashRegister.save();
-        res.status(201).json(savedSale);
+        return res.status(201).json(savedSale);
     }
     catch (error) {
-        res.status(500).json({ message: 'Error creating sale', error });
+        return res.status(500).json({ message: 'Error creating sale', error });
     }
 });
 exports.createSale = createSale;

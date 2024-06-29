@@ -59,7 +59,7 @@ export const createSale = async (req: Request, res: Response) => {
       switch (paymentMethod) {
         case 'cash':
           cashTotal += subtotal;
-          break;
+          break; 
         case 'credit':
           creditTotal += subtotal;
           break;
@@ -69,7 +69,7 @@ export const createSale = async (req: Request, res: Response) => {
         default:
           return res.status(400).json({ message: 'Invalid payment method' });
       }
-    });
+    }); 
 
     // Asegurar que los valores son numéricos antes de sumarlos
     cashRegister.payments.cash = cashRegister.payments.cash  + cashTotal;
@@ -81,8 +81,8 @@ export const createSale = async (req: Request, res: Response) => {
 
     await cashRegister.save();
 
-    res.status(201).json(savedSale);
+    return res.status(201).json(savedSale);
   } catch (error) {
-    res.status(500).json({ message: 'Error creating sale', error });
+    return res.status(500).json({ message: 'Error creating sale', error });
   }
 };

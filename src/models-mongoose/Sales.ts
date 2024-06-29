@@ -12,7 +12,7 @@ export interface SaleDocument extends Document {
     unitPrice: number;
     subtotal: number;
   }[];
-  paymentMethod: 'cash' | 'card';
+  paymentMethod: 'cash' | 'credit';
   paymentReference?: string;
   receivedAmount?: number;
   change?: number;
@@ -61,7 +61,7 @@ const saleSchema = new Schema<SaleDocument>({
   ],
   paymentMethod: {
     type: String,
-    enum: ['cash', 'card'],
+    enum: ['cash', 'credit'],
     required: true,
   },
   paymentReference: {

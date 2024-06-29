@@ -31,7 +31,7 @@ const cashRegisterSchema: Schema = new Schema({
   endDate: {
     type: Date,
     required: true,
-    default: Date.now,
+    default: Date.now, 
   },
   initialAmount: {
     type: Number,
