@@ -22,13 +22,13 @@ const getMenuFrontEnd = (role = 'admin') => {
         menu[0].title = 'USUARIO TOOLS';
         menu[0].id = 'user';
         menu[0].icon = 'bi bi-cone-striped';
-        menu[0].submenu.unshift({ title: 'Nueva Venta', url: 'user/new-sale', icon: 'bi bi-building-fill' }, { title: 'Items', url: 'user/items', icon: 'bi bi-people-fill' }, { title: 'recetas', url: 'admin/recipe', icon: 'bi bi-backpack4' });
+        menu[0].submenu.unshift({ title: 'Nueva Venta', url: 'user/new-sale', icon: 'bi bi-building-fill' }, { title: 'Items', url: 'user/items', icon: 'bi bi-people-fill' });
     }
     if (role === 'sysadmin') {
         menu[0].title = 'SYSADMIN TOOLS';
         menu[0].id = 'users';
         menu[0].icon = 'bi bi-people-fill';
-        menu[0].submenu.unshift({ title: 'Empresas', url: 'sysadmin/companies', icon: 'bi bi-building-fill' }, { title: 'Usuarios', url: 'sysadmin/users', icon: 'bi bi-people-fill' });
+        menu[0].submenu.unshift({ title: 'Empresas', url: 'sysadmin/companies', icon: 'bi bi-building-fill' }, { title: 'Usuarios', url: 'sysadmin/users', icon: 'bi bi-people-fill' }, { title: 'recetas', url: 'admin/recipe', icon: 'bi bi-backpack4' });
     }
     return menu;
 };
