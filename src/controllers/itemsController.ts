@@ -1,8 +1,6 @@
 // src/controllers/ItemController.ts
 
 import { Request, Response } from 'express';
-
-
 import Empresa from '../models-mongoose/Company';
 import Product from '../models-mongoose/Products';
 import Item from '../models-mongoose/Item';
@@ -71,6 +69,24 @@ export const getAllCompanyItems = async (req: Request, res: Response) => {
         res.status(500).json({ message: error });
     }
 };
+
+// Obtener todos los ítems de una compañía para el sysadmin
+export const getAllItemsOfCompanyForSysadmin = async (req: Request, res: Response) => {
+  try {
+    const { companyId } = req.params;
+    console.log('CompanyId: ', companyId);
+    const company = await Empresa.findById(companyId);
+    if (!company) {
+      return res.status(404).json({ message: 'Empresa no encontrada' });
+    }
+
+    const items = await Item.find({ company: companyId });
+    res.status(200).json({ ok: true, items });
+  } catch (error) {
+    res.status(500).json({ message: error });
+  }
+};
+
 export const getAllCompanyItemsPagination = async (req: Request, res: Response): Promise<Response> => {
     try {
         // Parámetros de paginación con valores por defecto
@@ -216,12 +232,14 @@ export const getItems = async (req: Request, res: Response) => {
       res.status(500).json({ message: 'Error fetching items', error });
     }
   };
-export default {
+
+  export default {
     createItem,
     getAllItems,
     getItemById,
     updateItem,
-    deleteItem
-};
+    deleteItem,
+    getAllItemsOfCompanyForSysadmin
+  };
 
 

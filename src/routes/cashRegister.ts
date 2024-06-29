@@ -1,6 +1,6 @@
 
 import express from 'express';
-import { openCashRegister, closeCashRegister, getCashRegisters, hasOpenCashRegister, getOpenCashRegister } from '../controllers/CashRegisterController';
+import { openCashRegister, closeCashRegister, getCashRegisters, hasOpenCashRegister, getOpenCashRegister, getOpenCashRegisterWithSales } from '../controllers/CashRegisterController';
 import { verifyToken } from '../middleware/jwtMiddleware';
 
 const router = express.Router();
@@ -19,6 +19,9 @@ router.get('/has-open/:userId', hasOpenCashRegister);
 
 
 router.get('/open/:userId', getOpenCashRegister);
+
+// Obtener la caja abierta con ventas
+router.get('/open-with-sales/:userId', verifyToken, getOpenCashRegisterWithSales);
 
 
 

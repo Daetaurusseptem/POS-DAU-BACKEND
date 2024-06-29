@@ -20,10 +20,7 @@ const multer_s3_1 = __importDefault(require("multer-s3"));
 const User_1 = __importDefault(require("../models-mongoose/User"));
 const Company_1 = __importDefault(require("../models-mongoose/Company"));
 const Products_1 = __importDefault(require("../models-mongoose/Products"));
-// otras importaciones ...
-const tiposPermitidos = ['usuarios', 'empresas', 'productos'];
-const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
-const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
+// Configuración de AWS
 aws_sdk_1.default.config.update({
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -36,14 +33,13 @@ const s3 = new client_s3_1.S3Client({
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     }
 });
-s3.config.credentials();
 // Configuración de multer-s3
 const upload = (0, multer_1.default)({
     storage: (0, multer_s3_1.default)({
         s3: s3,
         bucket: 'poscconor',
         key: function (req, file, cb) {
-            const tipo = req.params.tipo; // 'usuario', 'producto', 'compania'
+            const tipo = req.params.tipo; // Tipo de archivo (usuario, producto, empresa)
             const id = req.params.id; // ID de MongoDB
             const nombreArchivo = `${Date.now().toString()}-${file.originalname}`;
             const rutaArchivo = `img/${tipo}/${id}/${nombreArchivo}`;
@@ -53,10 +49,6 @@ const upload = (0, multer_1.default)({
 });
 // Controlador de carga
 const subirArchivo = (req, res) => {
-    const { tipo, id } = req.params;
-    if (!tiposPermitidos.includes(tipo)) {
-        return res.status(400).json({ error: 'Tipo no permitido' });
-    }
     const singleUpload = upload.single('img');
     singleUpload(req, res, function (error) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -68,39 +60,41 @@ const subirArchivo = (req, res) => {
                     return res.status(400).json({ error: 'Archivo no encontrado' });
                 }
                 const url = req.file.location;
-                console.log(url);
+                const { tipo, id } = req.params;
                 let urlImagenActual;
-                console.log(`imagen actual: ${urlImagenActual}`);
                 switch (tipo) {
                     case 'usuarios':
-                        const user = yield User_1.default.findById(id, { img: url });
+                        const user = yield User_1.default.findById(id);
                         urlImagenActual = user ? user.img : null;
                         if (!user) {
-                            return res.status(404).json({ error: 'usuario no encontrado' });
+                            return res.status(404).json({ error: 'Usuario no encontrado' });
                         }
-                        yield User_1.default.findByIdAndUpdate(id, { img: url });
+                        user.img = url;
+                        yield user.save();
                         break;
                     case 'empresas':
-                        const empresa = yield Company_1.default.findById(id, { img: url });
+                        const empresa = yield Company_1.default.findById(id);
                         urlImagenActual = empresa ? empresa.img : null;
                         if (!empresa) {
-                            return res.status(404).json({ error: 'empresa no encontrado' });
+                            return res.status(404).json({ error: 'Empresa no encontrada' });
                         }
-                        yield Company_1.default.findByIdAndUpdate(id, { img: url });
+                        empresa.img = url;
+                        yield empresa.save();
                         break;
                     case 'productos':
-                        const producto = yield Products_1.default.findById(id, { img: url });
+                        const producto = yield Products_1.default.findById(id);
                         urlImagenActual = producto ? producto.img : null;
                         if (!producto) {
-                            return res.status(404).json({ error: 'producto no encontrado' });
+                            return res.status(404).json({ error: 'Producto no encontrado' });
                         }
-                        yield Products_1.default.findByIdAndUpdate(id, { img: url });
+                        producto.img = url;
+                        yield producto.save();
                         break;
                     default:
                         return res.status(400).json({ error: 'Tipo no válido' });
                 }
                 const bucketUrl = "https://poscconor.s3.us-east-2.amazonaws.com/";
-                const keyImagenActual = urlImagenActual.replace(bucketUrl, '');
+                const keyImagenActual = urlImagenActual ? urlImagenActual.replace(bucketUrl, '') : null;
                 // Después de cargar la nueva imagen y actualizar la base de datos
                 if (keyImagenActual) {
                     yield eliminarImagenS3('poscconor', keyImagenActual);
@@ -123,11 +117,7 @@ const eliminarImagenS3 = (bucket, key) => __awaiter(void 0, void 0, void 0, func
         Key: key,
     };
     try {
-        yield s3.send(new client_s3_1.DeleteObjectCommand(deleteParams))
-            .catch(err => {
-            console.log(`error al subir imagen ${err}`);
-            return err;
-        });
+        yield s3.send(new client_s3_1.DeleteObjectCommand(deleteParams));
         console.log(`Archivo ${key} eliminado con éxito`);
     }
     catch (err) {

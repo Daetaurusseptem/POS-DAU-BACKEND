@@ -1,4 +1,3 @@
-
 import AWS from 'aws-sdk';
 import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import multer from 'multer';
@@ -7,15 +6,8 @@ import { Request, Response } from 'express';
 import User from "../models-mongoose/User";
 import Empresa from "../models-mongoose/Company";
 import Product from "../models-mongoose/Products";
-import { Bucket } from 'aws-sdk/clients/iotsitewise';
 
-// otras importaciones ...
-const tiposPermitidos = ['usuarios', 'empresas', 'productos'];
-
-
-const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
-const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
-
+// Configuración de AWS
 AWS.config.update({
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -27,11 +19,8 @@ const s3 = new S3Client({
     credentials: {
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
         accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-
     }
-})
-s3.config.credentials()
-
+});
 
 // Configuración de multer-s3
 const upload = multer({
@@ -39,7 +28,7 @@ const upload = multer({
         s3: s3,
         bucket: 'poscconor',
         key: function (req: Request, file, cb) {
-            const tipo = req.params.tipo; // 'usuario', 'producto', 'compania'
+            const tipo = req.params.tipo; // Tipo de archivo (usuario, producto, empresa)
             const id = req.params.id; // ID de MongoDB
             const nombreArchivo = `${Date.now().toString()}-${file.originalname}`;
             const rutaArchivo = `img/${tipo}/${id}/${nombreArchivo}`;
@@ -50,21 +39,9 @@ const upload = multer({
 
 // Controlador de carga
 export const subirArchivo = (req: Request, res: Response) => {
-    const { tipo, id } = req.params
-
-
-
-    if (!tiposPermitidos.includes(tipo)) {
-        return res.status(400).json({ error: 'Tipo no permitido' });
-    }
-
     const singleUpload = upload.single('img');
 
-    
-
     singleUpload(req, res, async function (error) {
-       
-        
         try {
             if (error) {
                 return res.status(500).json({ error: error.message });
@@ -75,50 +52,45 @@ export const subirArchivo = (req: Request, res: Response) => {
             }
     
             const url = req.file.location;
-
-            console.log(url);
+            const { tipo, id } = req.params;
             let urlImagenActual;
-
-            console.log(`imagen actual: ${urlImagenActual}`);
             
             switch (tipo) {
                 case 'usuarios':
-                    const user = await User.findById(id, { img: url });
+                    const user = await User.findById(id);
                     urlImagenActual = user ? user.img : null;
-                    if (!user) {  
-                        return res.status(404).json({ error: 'usuario no encontrado' });
+                    if (!user) {
+                        return res.status(404).json({ error: 'Usuario no encontrado' });
                     }
-                    await User.findByIdAndUpdate(id, { img: url });
+                    user.img = url;
+                    await user.save();
                     break;
                 case 'empresas':
-                    const empresa = await Empresa.findById(id, { img: url });
+                    const empresa = await Empresa.findById(id);
                     urlImagenActual = empresa ? empresa.img : null;
                     if (!empresa) {
-                        return res.status(404).json({ error: 'empresa no encontrado' });
+                        return res.status(404).json({ error: 'Empresa no encontrada' });
                     }
-                    await Empresa.findByIdAndUpdate(id, { img: url });
+                    empresa.img = url;
+                    await empresa.save();
                     break;
                 case 'productos':
-                    const producto = await Product.findById(id, { img: url });
+                    const producto = await Product.findById(id);
                     urlImagenActual = producto ? producto.img : null;
                     if (!producto) {
-                        return res.status(404).json({ error: 'producto no encontrado' });
+                        return res.status(404).json({ error: 'Producto no encontrado' });
                     }
-                    await Product.findByIdAndUpdate(id, { img: url });
+                    producto.img = url;
+                    await producto.save();
                     break;
                 default:
                     return res.status(400).json({ error: 'Tipo no válido' });
             }
 
-
-
             const bucketUrl = "https://poscconor.s3.us-east-2.amazonaws.com/";
-
-            const keyImagenActual = urlImagenActual!.replace(bucketUrl, '');
-
+            const keyImagenActual = urlImagenActual ? urlImagenActual.replace(bucketUrl, '') : null;
 
             // Después de cargar la nueva imagen y actualizar la base de datos
-            
             if (keyImagenActual) {
                 await eliminarImagenS3('poscconor', keyImagenActual);
             }
@@ -132,13 +104,7 @@ export const subirArchivo = (req: Request, res: Response) => {
             return res.status(500).json({ error: 'Error al actualizar la base de datos', dbError });
         }
     });
-
 };
-
-
-
-
-
 
 const eliminarImagenS3 = async (bucket: string, key: string) => {
     const deleteParams = {
@@ -146,11 +112,7 @@ const eliminarImagenS3 = async (bucket: string, key: string) => {
         Key: key,
     };
     try {
-        await s3.send(new DeleteObjectCommand(deleteParams))
-            .catch(err => { 
-                console.log(`error al subir imagen ${err}`)
-                return err
-             })
+        await s3.send(new DeleteObjectCommand(deleteParams));
         console.log(`Archivo ${key} eliminado con éxito`);
     } catch (err) {
         console.error("Error al eliminar archivo:", err);

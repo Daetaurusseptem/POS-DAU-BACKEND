@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getItemsByCategory = exports.getItems = exports.deleteItem = exports.updateItem = exports.getItemById = exports.getAllCompanyItemsPagination = exports.getAllCompanyItems = exports.getAllItems = exports.createItem = void 0;
+exports.getItemsByCategory = exports.getItems = exports.deleteItem = exports.updateItem = exports.getItemById = exports.getAllCompanyItemsPagination = exports.getAllItemsOfCompanyForSysadmin = exports.getAllCompanyItems = exports.getAllItems = exports.createItem = void 0;
 const Company_1 = __importDefault(require("../models-mongoose/Company"));
 const Products_1 = __importDefault(require("../models-mongoose/Products"));
 const Item_1 = __importDefault(require("../models-mongoose/Item"));
@@ -77,6 +77,23 @@ const getAllCompanyItems = (req, res) => __awaiter(void 0, void 0, void 0, funct
     }
 });
 exports.getAllCompanyItems = getAllCompanyItems;
+// Obtener todos los ítems de una compañía para el sysadmin
+const getAllItemsOfCompanyForSysadmin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { companyId } = req.params;
+        console.log('CompanyId: ', companyId);
+        const company = yield Company_1.default.findById(companyId);
+        if (!company) {
+            return res.status(404).json({ message: 'Empresa no encontrada' });
+        }
+        const items = yield Item_1.default.find({ company: companyId });
+        res.status(200).json({ ok: true, items });
+    }
+    catch (error) {
+        res.status(500).json({ message: error });
+    }
+});
+exports.getAllItemsOfCompanyForSysadmin = getAllItemsOfCompanyForSysadmin;
 const getAllCompanyItemsPagination = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // Parámetros de paginación con valores por defecto
@@ -212,5 +229,6 @@ exports.default = {
     getAllItems: exports.getAllItems,
     getItemById: exports.getItemById,
     updateItem: exports.updateItem,
-    deleteItem: exports.deleteItem
+    deleteItem: exports.deleteItem,
+    getAllItemsOfCompanyForSysadmin: exports.getAllItemsOfCompanyForSysadmin
 };

@@ -1,5 +1,4 @@
 "use strict";
-// src/controllers/productController.ts
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -13,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.searchProducts = exports.deleteProduct = exports.updateProduct = exports.getProductById = exports.getAllCompanyProducts = exports.getAllProducts = exports.createProduct = void 0;
+exports.searchProducts = exports.deleteProduct = exports.updateProduct = exports.getProductById = exports.getAllCompanyProducts = exports.getAllProductsOfCompanyForSysadmin = exports.getAllProducts = exports.createProduct = void 0;
 const Products_1 = __importDefault(require("../models-mongoose/Products"));
 const Company_1 = __importDefault(require("../models-mongoose/Company"));
 // Crear un nuevo producto
@@ -30,7 +29,7 @@ const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         req.body.company = companyId;
         const newProduct = new Products_1.default(req.body);
         const savedProduct = yield newProduct.save();
-        //subirImg
+        // subirImg
         req.params.id = newProduct._id;
         req.params.tipo = 'productos';
         return res.status(201).json({ ok: true, savedProduct });
@@ -51,6 +50,26 @@ const getAllProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.getAllProducts = getAllProducts;
+// Obtener todos los productos de una empresa para sysadmin
+const getAllProductsOfCompanyForSysadmin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { companyId } = req.params;
+        const companyDb = yield Company_1.default.findById(companyId);
+        if (!companyDb) {
+            return res.status(404).json({
+                ok: false,
+                msg: "No existe la empresa seleccionada"
+            });
+        }
+        const products = yield Products_1.default.find({ company: companyId }).populate('supplier');
+        res.status(200).json({ ok: true, products });
+    }
+    catch (error) {
+        res.status(500).json({ message: error });
+    }
+});
+exports.getAllProductsOfCompanyForSysadmin = getAllProductsOfCompanyForSysadmin;
+// Obtener todos los productos de una empresa
 const getAllCompanyProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
@@ -78,7 +97,6 @@ exports.getProductById = getProductById;
 // Actualizar un producto
 const updateProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log(req.body);
         const updatedProduct = yield Products_1.default.findByIdAndUpdate(req.params.id, req.body, { new: true });
         if (!updatedProduct)
             return res.status(404).json({ message: 'Producto no encontrado' });
@@ -102,6 +120,7 @@ const deleteProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.deleteProduct = deleteProduct;
+// Buscar productos
 const searchProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { page = 1, limit = 5, search = '', companyId } = req.query;

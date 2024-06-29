@@ -25,6 +25,25 @@ export const openCashRegister = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Error opening cash register', error });
   }
 };
+
+// Obtener la caja abierta del usuario y las ventas asociadas
+export const getOpenCashRegisterWithSales = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+
+    // Buscar una caja abierta del usuario especificado
+    const openCashRegister = await CashRegister.findOne({ user: userId, closed: false }).populate('sales');
+
+    if (!openCashRegister) {
+      return res.status(404).json({ message: 'No open cash register found for this user' });
+    }
+
+    // Devolver la caja abierta con las ventas asociadas
+    res.status(200).json(openCashRegister);
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving open cash register with sales', error });
+  }
+};
   
 // Cerrar caja
 export const closeCashRegister = async (req: Request, res: Response) => {

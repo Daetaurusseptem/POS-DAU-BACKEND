@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteUser = exports.updateUser = exports.createUser = exports.getUserByIdSoloAdmin = exports.getUserById = exports.getUnassignedAdmins = exports.getAllAdmins = exports.getCompanyAdmin = exports.getAvailableAdmins = exports.getAllNonAdminUsersOfCompany = exports.getNumberUsers = exports.getAllUsers = exports.isCompanyAdmin = void 0;
+exports.deleteUser = exports.updateUser = exports.createUser = exports.getUserByIdSoloAdmin = exports.getUserById = exports.getUnassignedAdmins = exports.getAllAdmins = exports.getCompanyAdmin = exports.getAvailableAdmins = exports.getAllUsersOfCompany = exports.getAllNonAdminUsersOfCompany = exports.getNumberUsers = exports.getAllUsers = exports.isCompanyAdmin = void 0;
 const User_1 = __importDefault(require("../models-mongoose/User"));
 const Company_1 = __importDefault(require("../models-mongoose/Company"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
@@ -65,7 +65,6 @@ const getAllNonAdminUsersOfCompany = (req, res) => __awaiter(void 0, void 0, voi
         }
         // Encuentra todos los usuarios de la empresa, excluyendo al administrador
         const users = yield User_1.default.find({ companyId: company._id, _id: { $ne: adminId } }).exec();
-        console.log(users);
         res.status(200).json({ ok: true, users });
     }
     catch (error) {
@@ -74,6 +73,21 @@ const getAllNonAdminUsersOfCompany = (req, res) => __awaiter(void 0, void 0, voi
     }
 });
 exports.getAllNonAdminUsersOfCompany = getAllNonAdminUsersOfCompany;
+const getAllUsersOfCompany = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const companyId = req.params.companyId;
+    //console.log(companyId);
+    try {
+        // Encuentra todos los usuarios de la empresa, excluyendo al administrador
+        const users = yield User_1.default.find({ companyId });
+        console.log(users);
+        res.status(200).json({ ok: true, users });
+    }
+    catch (error) {
+        console.error('Error al obtener usuarios de la empresa:', error);
+        res.status(500).json({ ok: false, message: `error:${error}` });
+    }
+});
+exports.getAllUsersOfCompany = getAllUsersOfCompany;
 const getAvailableAdmins = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // Obtener todos los IDs de administradores de empresas
@@ -232,7 +246,6 @@ exports.updateUser = updateUser;
 const deleteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = req.params.id;
     const adminCompany = yield Company_2.default.find({ adminId: userId });
-    console.log(adminCompany.length);
     if (adminCompany.length > 0) {
         return res.status(403).json({ ok: false, msg: 'El elemento tiene referencias asignadas a el, eliminalas!', adminCompany });
     }

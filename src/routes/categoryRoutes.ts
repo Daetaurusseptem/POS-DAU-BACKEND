@@ -25,3 +25,4 @@ router.put('/:id', verifyToken, updateCategory);
 router.delete('/:id', verifyToken, deleteCategory);
 
 export default router;
+ 

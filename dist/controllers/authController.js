@@ -54,14 +54,16 @@ const renewToken = (req, resp) => __awaiter(void 0, void 0, void 0, function* ()
     const uid = req.uid;
     const token = yield (0, jwt_helper_1.generarJWT)(uid);
     //return user
-    let usuario = yield User_1.default.findById(uid).select('+password');
+    const usuario = yield User_1.default.findById(uid).select('+password');
     if (!usuario) {
         return resp.status(404).json({
             ok: false,
             msg: 'No se encontro el usuario'
         });
     }
-    let company = yield Company_1.default.findOne({ adminId: uid });
+    const company = yield Company_1.default.findOne({ adminId: uid });
+    console.log('Empresa: ', company);
+    console.log('AdminId: ', uid);
     return resp.status(200).json({
         ok: true,
         token,

@@ -14,7 +14,6 @@ export const generarJWT = (uid:string) => {
             },
             (err, token) => {
                 if (err) {
-                    console.log(token);
                     reject('could not generate JWT')
                 }else{
                     resolve(token)

@@ -102,7 +102,7 @@ const getCategoryById = (req, res) => __awaiter(void 0, void 0, void 0, function
         if (!category) {
             return res.status(404).json({ message: 'Category not found' });
         }
-        res.status(200).json(category);
+        res.status(200).json({ ok: true, category });
     }
     catch (error) {
         res.status(500).json({ message: error });
@@ -111,11 +111,12 @@ const getCategoryById = (req, res) => __awaiter(void 0, void 0, void 0, function
 exports.getCategoryById = getCategoryById;
 const updateCategory = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        console.log('CATEGORIA: ', req.body);
         const category = yield Category_1.default.findByIdAndUpdate(req.params.id, req.body, { new: true });
         if (!category) {
             return res.status(404).json({ message: 'Category not found' });
         }
-        res.status(200).json(category);
+        res.status(200).json({ ok: true, category });
     }
     catch (error) {
         res.status(400).json({ message: error });

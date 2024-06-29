@@ -60,6 +60,21 @@ export const getAllNonAdminUsersOfCompany = async (req: Request, res: Response) 
 
     // Encuentra todos los usuarios de la empresa, excluyendo al administrador
     const users = await User.find({ companyId: company._id, _id: { $ne: adminId } }).exec();
+    res.status(200).json({ok:true,users});
+  } catch (error) {
+    console.error('Error al obtener usuarios de la empresa:', error);
+    res.status(500).json({ok:false, message:`error:${error}`});
+  }
+};
+
+export const getAllUsersOfCompany = async (req: Request, res: Response) => {
+  const companyId = req.params.companyId;
+  //console.log(companyId);
+
+  try {
+
+    // Encuentra todos los usuarios de la empresa, excluyendo al administrador
+    const users = await User.find({ companyId });
     console.log(users);
     res.status(200).json({ok:true,users});
   } catch (error) {
@@ -67,6 +82,7 @@ export const getAllNonAdminUsersOfCompany = async (req: Request, res: Response) 
     res.status(500).json({ok:false, message:`error:${error}`});
   }
 };
+
 export const getAvailableAdmins = async (req:Request, res:Response) => {
   try {
     // Obtener todos los IDs de administradores de empresas
@@ -248,7 +264,6 @@ export const deleteUser = async (req: Request, res: Response) => {
   const userId = req.params.id;
   
   const adminCompany = await Empresa.find({adminId:userId})
-  console.log(adminCompany.length);
   
   if(adminCompany.length>0){
    return res.status(403).json({ok:false, msg:'El elemento tiene referencias asignadas a el, eliminalas!', adminCompany})
