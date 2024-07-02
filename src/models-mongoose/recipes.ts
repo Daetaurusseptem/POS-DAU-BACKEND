@@ -1,32 +1,44 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-
-interface recipe extends Document {
-
-    name: string;
-    description: string;
-    company: Schema.Types.ObjectId;
-
+export interface RecipeIngredient {
+  ingredient: mongoose.Types.ObjectId;
+  quantity: number;
 }
 
-const recipeSchema = new Schema({
-    name: { 
-        type: 'string', 
-        required: true },
-        
-    description: { 
-        type: 'string', 
-        required: true },
+export interface RecipeDocument extends Document {
+  name: string;
+  description: string;
+  company: mongoose.Types.ObjectId;
+  ingredients: RecipeIngredient[];
+}
 
-    company: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Empresa',
-        required: true,
-    },
-
+const recipeIngredientSchema = new Schema<RecipeIngredient>({
+  ingredient: {
+    type: Schema.Types.ObjectId,
+    ref: 'Ingredient',
+    required: true,
+  },
+  quantity: {
+    type: Number,
+    required: true,
+  }
 });
 
-const Recipe = mongoose.model<recipe>('Recipe', recipeSchema);
+const recipeSchema = new Schema<RecipeDocument>({
+  name: {
+    type: String,
+    required: true,
+  },
+  description: {
+    type: String,
+    required: true,
+  },
+  ingredients: [recipeIngredientSchema],
+  company: {
+    type: Schema.Types.ObjectId,
+    ref: 'Empresa',
+    required: false,
+  },
+});
 
-export default Recipe;
-export { recipe };
+export default mongoose.model<RecipeDocument>('Recipe', recipeSchema);

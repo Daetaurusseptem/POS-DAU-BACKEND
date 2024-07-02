@@ -12,6 +12,7 @@ export interface ProductDocument extends Document {
   marca: string;
   supplier: Schema.Types.ObjectId;
   company: Schema.Types.ObjectId;
+  recipe: Schema.Types.ObjectId;
   categories: Schema.Types.ObjectId[];
   
 }
@@ -47,6 +48,10 @@ const productSchema = new Schema<ProductDocument>({
   categories: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category'
+  }],
+  recipe:[{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:'Recipe'
   }]
 });
 // Esquema del modelo de lote (si decides implementarlo)

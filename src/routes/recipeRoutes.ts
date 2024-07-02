@@ -1,19 +1,10 @@
 import express from 'express';
-import { createRecipe, getAllRecipes, getCompanyRecipes, getByIdRecipes, deleteRecipe, updateRecipe} from '../controllers/recipesController';
-import {verifyToken } from '../middleware/jwtMiddleware';
+import { createRecipe, getRecipes, consumeIngredients } from '../controllers/recipeController';
 
 const router = express.Router();
 
-router.post('/',createRecipe);
-
-router.get('/', getAllRecipes);
-
-router.get('/:companyId', getCompanyRecipes);
-
-router.get('/by-Id/:recipesId', getByIdRecipes);
-
-router.delete('/:id', deleteRecipe);
-
-router.put('/:id', updateRecipe);
+router.post('/', createRecipe);
+router.get('/', getRecipes);
+router.post('/consume', consumeIngredients);
 
 export default router;

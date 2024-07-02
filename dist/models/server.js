@@ -28,6 +28,7 @@ const suppliersRoutes_1 = __importDefault(require("../routes/suppliersRoutes"));
 const categoryRoutes_1 = __importDefault(require("../routes/categoryRoutes"));
 const cashRegister_1 = __importDefault(require("../routes/cashRegister"));
 const dailySaleRoutes_1 = __importDefault(require("../routes/dailySaleRoutes"));
+const ingredientRoutes_1 = __importDefault(require("../routes/ingredientRoutes"));
 const recipeRoutes_1 = __importDefault(require("../routes/recipeRoutes"));
 class Server {
     constructor() {
@@ -57,7 +58,8 @@ class Server {
         this.app.use('/api/suppliers', suppliersRoutes_1.default); // Rutas para proveedores
         this.app.use('/api/cash-registers', cashRegister_1.default); // Rutas para caja
         this.app.use('/api', dailySaleRoutes_1.default); // Añade la nueva ruta
-        this.app.use('/api/recipe', recipeRoutes_1.default); // Rutas para lotes
+        this.app.use('/api/ingredients', ingredientRoutes_1.default);
+        this.app.use('/api/recipes', recipeRoutes_1.default);
     }
     connectToAwsS3() {
         return __awaiter(this, void 0, void 0, function* () {

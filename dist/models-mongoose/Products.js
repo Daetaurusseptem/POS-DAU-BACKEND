@@ -53,6 +53,10 @@ const productSchema = new mongoose_1.Schema({
     categories: [{
             type: mongoose_1.default.Schema.Types.ObjectId,
             ref: 'Category'
+        }],
+    recipe: [{
+            type: mongoose_1.default.Schema.Types.ObjectId,
+            ref: 'Recipe'
         }]
 });
 // Esquema del modelo de lote (si decides implementarlo)
