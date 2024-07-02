@@ -30,7 +30,7 @@ export const getMenuFrontEnd = (role = 'admin') => {
     menu[0].submenu.unshift(
       { title: 'Nueva Venta', url: 'user/new-sale', icon: 'bi bi-building-fill' },
       { title: 'Items', url: 'user/items', icon: 'bi bi-people-fill' },
-      { title: 'recetas', url: 'admin/recipe', icon: 'bi bi-backpack4' },
+
       // { title: 'Productos', url: 'admin/products', icon: 'bi bi-bag-fill' },
       // { title: 'Proveedores', url: 'admin/products', icon: 'bi bi-file-earmark-person' },
       // { title: 'Lotes', url: 'admin/products', icon: 'bi bi-box2-fill' },
@@ -44,7 +44,8 @@ export const getMenuFrontEnd = (role = 'admin') => {
     menu[0].icon = 'bi bi-people-fill';
     menu[0].submenu.unshift(
       { title: 'Empresas', url: 'sysadmin/companies', icon: 'bi bi-building-fill' },
-      { title: 'Usuarios', url: 'sysadmin/users', icon: 'bi bi-people-fill' }
+      { title: 'Usuarios', url: 'sysadmin/users', icon: 'bi bi-people-fill' },
+      { title: 'recetas', url: 'admin/recipe', icon: 'bi bi-backpack4' },
     );
   }
 
