@@ -194,6 +194,10 @@ export const validarAdminCompany = async(req:any, resp:Response, next:any)  => {
         }
         const companyAdminId = await Empresa.findById(companyId);
 
+        if ( usuarioDB.get('role') === 'sysadmin' ) {
+
+            return next();
+        }
         if ( usuarioDB.get('role') !== 'admin' ) {
             return resp.status(403).json({
                 ok: false,

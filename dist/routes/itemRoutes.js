@@ -13,7 +13,7 @@ router.get('/:empresaId', jwtMiddleware_1.verifyToken, jwtMiddleware_1.validarEm
 router.get('/', itemsController_1.getAllItems);
 router.get('/company/:companyId', itemsController_1.getAllCompanyItemsPagination);
 router.get('/company/sysadmin/:companyId', [jwtMiddleware_1.verifyToken, jwtMiddleware_1.validarAdminOrSysAdmin], itemsController_1.getAllCompanyItemsPagination);
-router.get('/:id', itemsController_1.getItemById);
+router.get('/item/:id', itemsController_1.getItemById);
 router.put('/:id', itemsController_1.updateItem);
 router.delete('/:id', itemsController_1.deleteItem);
 router.get('/by-category/:companyId', [jwtMiddleware_1.verifyToken], itemsController_1.getItemsByCategory);
