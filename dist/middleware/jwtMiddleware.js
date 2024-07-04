@@ -165,6 +165,9 @@ const validarAdminCompany = (req, resp, next) => __awaiter(void 0, void 0, void 
             });
         }
         const companyAdminId = yield Company_1.default.findById(companyId);
+        if (usuarioDB.get('role') === 'sysadmin') {
+            return next();
+        }
         if (usuarioDB.get('role') !== 'admin') {
             return resp.status(403).json({
                 ok: false,

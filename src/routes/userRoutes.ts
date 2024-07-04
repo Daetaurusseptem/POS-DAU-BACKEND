@@ -36,7 +36,7 @@ router.get('/company/sysadmin/:companyId', [verifyToken, validarAdminOrSysAdmin]
 router.get('/:id', verifyToken, validarSysAdmin, getUserById);
 router.get('/company/solo/:id', verifyToken, validarAdmin,validarAdminCompany, getUserByIdSoloAdmin);
 router.post('/',verifyToken, createUser);
-router.put('/:id', verifyToken, validarSysAdmin, updateUser);
+router.put('/:id', verifyToken,[verifyToken, validarAdminCompany, validarAdminOrSysAdmin], updateUser);
 router.delete('/:id', verifyToken, validarSysAdmin, deleteUser);
 
 export default router;

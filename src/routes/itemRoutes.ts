@@ -22,7 +22,7 @@ router.get('/:empresaId', verifyToken, validarEmpresaUsuario, getItems);
 router.get('/', getAllItems);
 router.get('/company/:companyId', getAllCompanyItemsPagination);
 router.get('/company/sysadmin/:companyId', [verifyToken, validarAdminOrSysAdmin], getAllCompanyItemsPagination);
-router.get('/:id', getItemById);
+router.get('/item/:id', getItemById);
 router.put('/:id', updateItem);
 router.delete('/:id', deleteItem);
 router.get('/by-category/:companyId', [verifyToken], getItemsByCategory);

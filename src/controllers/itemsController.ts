@@ -128,10 +128,12 @@ export const getAllCompanyItemsPagination = async (req: Request, res: Response):
 export const getItemById = async (req: Request, res: Response) => {
     try {
         const item = await Item.findById(req.params.id);
-        if (!Item) return res.status(404).json({ message: 'Item no encontrado' });
-        res.status(200).json(Item);
+        if (!item) {return res.status(404).json({ message: 'Item no encontrado' })};
+        console.log(item);
+        return res.status(200).json({ok:true, item});
     } catch (error) {
-        res.status(500).json({ message: error });
+      console.log(error);
+        return res.status(500).json({ message: error });
     }
 };
 
