@@ -14,7 +14,7 @@ export interface IngredientDocument extends Document {
 const ingredientSchema = new Schema<IngredientDocument>({
   name: { type: String, required: true },
   quantity: { type: Number, required: true, min: 0 },
-  priceProvider: { type: Number, required: true },
+  priceProvider: { min:0,type: Number, required: true },
   measurement: { type: String, enum: ['grms', 'ml', 'kg', 'lts'], required: true },
   provider: { type: Schema.Types.ObjectId, ref: 'Provider', required: true },
   receivedDate: { type: Date, required: true },

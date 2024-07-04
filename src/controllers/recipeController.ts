@@ -4,6 +4,8 @@ import Ingredient from '../models-mongoose/Ingredient';
 
 export const createRecipe = async (req: Request, res: Response) => {
   try {
+    const {companyId} = req.params;
+    req.body.company = companyId;
     const recipe = new Recipe(req.body);
     await recipe.save();
     res.status(201).json(recipe);

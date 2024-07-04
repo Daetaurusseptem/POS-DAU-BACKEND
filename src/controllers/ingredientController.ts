@@ -32,7 +32,9 @@ export const getIngredientByCompanyId = async (req: Request, res: Response) => {
         return res.status(404).json({ message: 'Company not found' });
       }
 
+      
       const ingredients = await Ingredient.find({ company: companyId })
+      console.log(ingredients);
 
       res.status(200).json({ok:true, ingredients});
     } catch (error) {
@@ -47,7 +49,7 @@ export const getIngredientByCompanyId = async (req: Request, res: Response) => {
       if (!ingredient) {
         return res.status(404).json({ message: 'Ingredient not found' });
       }
-      res.status(200).json(ingredient);
+      res.status(200).json({ok:true,ingredient});
     } catch (error) {
       res.status(500).json({ message: 'Error fetching ingredient', error });
     }
