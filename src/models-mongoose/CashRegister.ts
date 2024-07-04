@@ -34,10 +34,12 @@ const cashRegisterSchema: Schema = new Schema({
     default: Date.now, 
   },
   initialAmount: {
+    min:0,
     type: Number,
     required: true,
   },
   finalAmount: {
+    min:0,
     type: Number,
     required: true,
   },
@@ -46,16 +48,19 @@ const cashRegisterSchema: Schema = new Schema({
       type: Number,
       required: true,
       default: 0,
+      min:0
     },
     credit: {
       type: Number,
       required: true,
       default: 0,
+      min:0
     },
     debit: {
       type: Number,
       required: true,
       default: 0,
+      min:0,
     },
   },
   sales: [{

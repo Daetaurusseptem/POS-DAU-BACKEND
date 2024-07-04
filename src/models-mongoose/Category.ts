@@ -9,7 +9,7 @@ interface Category {
 const CategorySchema = new mongoose.Schema<Category>({
     company:{
         type:mongoose.Schema.Types.ObjectId,
-        ref:'Company',
+        ref:'Empresa',
         required:true
     },
     name: {

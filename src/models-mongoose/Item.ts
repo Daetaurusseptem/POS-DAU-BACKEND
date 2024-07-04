@@ -1,48 +1,25 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema, Document } from 'mongoose';
 
-export interface Item {
-    name:string;
-    product: Schema.Types.ObjectId,
-    stock: Number,
-    price: Number,
-    expirationDate?: Date;
-    discount: number;
-    receivedDate: Date,
-    company:Schema.Types.ObjectId
+export interface ItemDocument extends Document {
+  name: string;
+  product: Schema.Types.ObjectId;
+  stock: number;
+  price: number;
+  expirationDate?: Date;
+  discount: number;
+  receivedDate: Date;
+  company: Schema.Types.ObjectId;
 }
 
-const itemSchema = new Schema<Item>({
-    
-    name:String,
-    company: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Empresa'
-    },
-    product: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Product'
-    },
-    price: {  
-        type: Number, 
-        required: true
-    }, 
-    stock: {
-        type: Number,
-        required: true,
-        min: 0
-    },
-    discount: {
-        type: Number,
-        required: true,
-        default: 0,
-        min: 0,
-        max: 100,
-    },
-    receivedDate: Date,
-    expirationDate: Date,
-    
+const itemSchema = new Schema<ItemDocument>({
+  name: { type: String, required: true },
+  company: { type: Schema.Types.ObjectId, ref: 'Empresa', required: true },
+  product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+  price: { type: Number, required: true, min:0 },
+  stock: { type: Number, required: true, min: 0 },
+  discount: { type: Number, required: true, default: 0, min: 0, max: 100 },
+  receivedDate: { type: Date, required: true },
+  expirationDate: { type: Date }
 });
 
-const Item = mongoose.model('Item', itemSchema);
-
-export default Item;
+export default mongoose.model<ItemDocument>('Item', itemSchema);

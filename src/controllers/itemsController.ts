@@ -4,6 +4,8 @@ import { Request, Response } from 'express';
 import Empresa from '../models-mongoose/Company';
 import Product from '../models-mongoose/Products';
 import Item from '../models-mongoose/Item';
+import recipes from '../models-mongoose/recipes';
+import Ingredient from '../models-mongoose/Ingredient';
 
 
 // Crear un nuevo Item
@@ -192,7 +194,7 @@ export const getItems = async (req: Request, res: Response) => {
   export const getItemsByCategory = async (req: Request, res: Response) => {
     try {
       const { category, search = '', page = 1, limit = 10 } = req.query;
-  
+      console.log(category,search,page,limit);
       if (!category) {
         return res.status(400).json({ message: 'Category is required' });
       }
@@ -229,9 +231,51 @@ export const getItems = async (req: Request, res: Response) => {
         currentPage: Number(page)
       });
     } catch (error) {
+      console.log(error);
       res.status(500).json({ message: 'Error fetching items', error });
     }
   };
+  
+
+
+export const deductStockForSimpleItem = async (itemId: string, quantity: number) => {
+  const item = await Item.findById(itemId);
+  if (!item) throw new Error('Item not found');
+
+  item.stock -= quantity;
+  if (item.stock < 0) throw new Error(`Not enough stock for item ${item.name}`);
+  await item.save();
+};
+
+export const deductIngredientsForCompositeItem = async (recipeId: string, quantity: number) => {
+  const recipe = await recipes.findById(recipeId).populate('ingredients.ingredient');
+  if (!recipe) throw new Error('Recipe not found');
+
+  for (const recipeIngredient of recipe.ingredients) {
+    const ingredient = await Ingredient.findById(recipeIngredient.ingredient._id);
+    if (!ingredient) throw new Error('Ingredient not found');
+    
+    ingredient.quantity -= recipeIngredient.quantity * quantity;
+    if (ingredient.quantity < 0) throw new Error(`Not enough ${ingredient.name} in stock`);
+    await ingredient.save();
+  }
+};
+
+export const processSale = async (saleData: any) => {
+  for (const productSold of saleData.productsSold) {
+    const item = await Item.findById(productSold.itemId).populate('product');
+    if (!item) throw new Error('Item not found');
+
+    if (item.product.isComposite) {
+      if (!item.product.recipe) throw new Error('Composite product does not have a recipe');
+      await deductIngredientsForCompositeItem(item.product.recipe, productSold.quantity);
+    } else {
+      await deductStockForSimpleItem(item._id, productSold.quantity);
+    }
+  }
+};
+
+
 
   export default {
     createItem,

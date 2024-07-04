@@ -20,9 +20,9 @@ export const createProduct = async (req: Request, res: Response) => {
         const newProduct = new Product(req.body);
         const savedProduct = await newProduct.save();
 
-        // subirImg
-        req.params.id = newProduct._id!;
-        req.params.tipo = 'productos';
+         // subirImg
+         req.params.id = newProduct._id!;
+         req.params.tipo = 'productos';
 
         return res.status(201).json({ ok: true, savedProduct });
     } catch (error) {
@@ -35,7 +35,7 @@ export const getAllProducts = async (req: Request, res: Response) => {
     try {
         const products = await Product.find().populate('supplier');
         res.status(200).json({ ok: true, products });
-    } catch (error) {
+    } catch (error) { 
         res.status(500).json({ message: error });
     }
 };

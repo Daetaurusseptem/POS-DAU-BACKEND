@@ -7,7 +7,7 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const CategorySchema = new mongoose_1.default.Schema({
     company: {
         type: mongoose_1.default.Schema.Types.ObjectId,
-        ref: 'Company',
+        ref: 'Empresa',
         required: true
     },
     name: {

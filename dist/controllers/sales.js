@@ -16,6 +16,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createSale = exports.getSaleById = exports.getAllSales = void 0;
 const Sales_1 = __importDefault(require("../models-mongoose/Sales"));
 const CashRegister_1 = __importDefault(require("../models-mongoose/CashRegister"));
+const Item_1 = __importDefault(require("../models-mongoose/Item"));
+const recipes_1 = __importDefault(require("../models-mongoose/recipes"));
+const Ingredient_1 = __importDefault(require("../models-mongoose/Ingredient"));
 // Obtener todas las ventas
 const getAllSales = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -40,14 +43,56 @@ const getSaleById = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.getSaleById = getSaleById;
+const deductStockForSimpleItem = (itemId, quantity) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(itemId, quantity);
+    const item = yield Item_1.default.findById(itemId);
+    if (!item)
+        throw new Error('Item not found');
+    item.stock -= quantity;
+    if (item.stock < 0)
+        throw new Error(`Not enough stock for item ${item.name}`);
+    yield item.save();
+});
+const deductIngredientsForCompositeItem = (recipeId, quantity) => __awaiter(void 0, void 0, void 0, function* () {
+    const recipe = yield recipes_1.default.findById(recipeId).populate('ingredients.ingredient');
+    if (!recipe)
+        throw new Error('Recipe not found');
+    for (const recipeIngredient of recipe.ingredients) {
+        const ingredient = yield Ingredient_1.default.findById(recipeIngredient.ingredient._id);
+        if (!ingredient)
+            throw new Error('Ingredient not found');
+        ingredient.quantity -= recipeIngredient.quantity * quantity;
+        if (ingredient.quantity < 0)
+            throw new Error(`Not enough ${ingredient.name} in stock`);
+        yield ingredient.save();
+    }
+});
+const processSale = (productsSold) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(productsSold);
+    for (const productSold of productsSold) {
+        const item = yield Item_1.default.findById(productSold._id).populate('product');
+        if (!item)
+            throw new Error('Item not found');
+        if (item.product.isComposite) {
+            if (!item.product.recipe)
+                throw new Error('Composite product does not have a recipe');
+            yield deductIngredientsForCompositeItem(item.product.recipe, productSold.quantity);
+        }
+        else {
+            yield deductStockForSimpleItem(item._id, productSold.quantity);
+        }
+    }
+});
 const createSale = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { user, total, discount, productsSold, paymentMethod } = req.body;
-        // Obtener la caja abierta del usuario
+        const { user, total, discount, productsSold, paymentMethod, } = req.body;
+        // Obtener la caja abierta del usuario 
         const cashRegister = yield CashRegister_1.default.findOne({ user, closed: false });
         if (!cashRegister) {
             return res.status(400).json({ message: 'No open cash register found for this user' });
         }
+        // Procesar la venta y actualizar el inventario
+        yield processSale(productsSold);
         // Crear una nueva venta
         const newSale = new Sales_1.default({
             user,
@@ -79,15 +124,16 @@ const createSale = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             }
         });
         // Asegurar que los valores son numéricos antes de sumarlos
-        cashRegister.payments.cash = cashRegister.payments.cash + cashTotal;
-        cashRegister.payments.credit = cashRegister.payments.credit + creditTotal;
-        cashRegister.payments.debit = cashRegister.payments.debit + debitTotal;
+        cashRegister.payments.cash += cashTotal;
+        cashRegister.payments.credit += creditTotal;
+        cashRegister.payments.debit += debitTotal;
         // Agregar la venta a la caja
         cashRegister.sales.push(savedSale._id);
         yield cashRegister.save();
         return res.status(201).json(savedSale);
     }
     catch (error) {
+        console.log(error);
         return res.status(500).json({ message: 'Error creating sale', error });
     }
 });

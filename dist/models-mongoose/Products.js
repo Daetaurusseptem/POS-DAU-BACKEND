@@ -23,43 +23,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// src/models/product.model.ts
 const mongoose_1 = __importStar(require("mongoose"));
-// Esquema del modelo de producto
 const productSchema = new mongoose_1.Schema({
-    img: {
-        type: String,
-        default: ''
-    },
-    name: {
-        type: String,
-        required: true,
-        index: true
-    },
-    marca: {
-        type: String
-    },
-    description: String,
-    company: {
-        type: mongoose_1.default.Schema.Types.ObjectId,
-        ref: 'Empresa',
-        required: true,
-    },
-    supplier: {
-        type: mongoose_1.default.Schema.Types.ObjectId,
-        ref: 'Supplier',
-        required: true,
-    },
-    categories: [{
-            type: mongoose_1.default.Schema.Types.ObjectId,
-            ref: 'Category'
-        }],
-    recipe: [{
-            type: mongoose_1.default.Schema.Types.ObjectId,
-            ref: 'Recipe'
-        }]
+    name: { type: String, required: true },
+    description: { type: String },
+    marca: { type: String, required: true },
+    supplier: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Supplier', required: true },
+    company: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Company', required: true },
+    categories: [{ type: mongoose_1.Schema.Types.ObjectId, ref: 'Category', required: true }],
+    isComposite: { type: Boolean, required: true },
+    recipe: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Recipe' }
 });
-// Esquema del modelo de lote (si decides implementarlo)
-// Modelo de producto
-const Product = mongoose_1.default.model('Product', productSchema);
-exports.default = Product;
+exports.default = mongoose_1.default.model('Product', productSchema);

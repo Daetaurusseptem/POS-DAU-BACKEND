@@ -13,10 +13,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getItemsByCategory = exports.getItems = exports.deleteItem = exports.updateItem = exports.getItemById = exports.getAllCompanyItemsPagination = exports.getAllItemsOfCompanyForSysadmin = exports.getAllCompanyItems = exports.getAllItems = exports.createItem = void 0;
+exports.processSale = exports.deductIngredientsForCompositeItem = exports.deductStockForSimpleItem = exports.getItemsByCategory = exports.getItems = exports.deleteItem = exports.updateItem = exports.getItemById = exports.getAllCompanyItemsPagination = exports.getAllItemsOfCompanyForSysadmin = exports.getAllCompanyItems = exports.getAllItems = exports.createItem = void 0;
 const Company_1 = __importDefault(require("../models-mongoose/Company"));
 const Products_1 = __importDefault(require("../models-mongoose/Products"));
 const Item_1 = __importDefault(require("../models-mongoose/Item"));
+const recipes_1 = __importDefault(require("../models-mongoose/recipes"));
+const Ingredient_1 = __importDefault(require("../models-mongoose/Ingredient"));
 // Crear un nuevo Item
 const createItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -194,6 +196,7 @@ exports.getItems = getItems;
 const getItemsByCategory = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { category, search = '', page = 1, limit = 10 } = req.query;
+        console.log(category, search, page, limit);
         if (!category) {
             return res.status(400).json({ message: 'Category is required' });
         }
@@ -220,10 +223,52 @@ const getItemsByCategory = (req, res) => __awaiter(void 0, void 0, void 0, funct
         });
     }
     catch (error) {
+        console.log(error);
         res.status(500).json({ message: 'Error fetching items', error });
     }
 });
 exports.getItemsByCategory = getItemsByCategory;
+const deductStockForSimpleItem = (itemId, quantity) => __awaiter(void 0, void 0, void 0, function* () {
+    const item = yield Item_1.default.findById(itemId);
+    if (!item)
+        throw new Error('Item not found');
+    item.stock -= quantity;
+    if (item.stock < 0)
+        throw new Error(`Not enough stock for item ${item.name}`);
+    yield item.save();
+});
+exports.deductStockForSimpleItem = deductStockForSimpleItem;
+const deductIngredientsForCompositeItem = (recipeId, quantity) => __awaiter(void 0, void 0, void 0, function* () {
+    const recipe = yield recipes_1.default.findById(recipeId).populate('ingredients.ingredient');
+    if (!recipe)
+        throw new Error('Recipe not found');
+    for (const recipeIngredient of recipe.ingredients) {
+        const ingredient = yield Ingredient_1.default.findById(recipeIngredient.ingredient._id);
+        if (!ingredient)
+            throw new Error('Ingredient not found');
+        ingredient.quantity -= recipeIngredient.quantity * quantity;
+        if (ingredient.quantity < 0)
+            throw new Error(`Not enough ${ingredient.name} in stock`);
+        yield ingredient.save();
+    }
+});
+exports.deductIngredientsForCompositeItem = deductIngredientsForCompositeItem;
+const processSale = (saleData) => __awaiter(void 0, void 0, void 0, function* () {
+    for (const productSold of saleData.productsSold) {
+        const item = yield Item_1.default.findById(productSold.itemId).populate('product');
+        if (!item)
+            throw new Error('Item not found');
+        if (item.product.isComposite) {
+            if (!item.product.recipe)
+                throw new Error('Composite product does not have a recipe');
+            yield (0, exports.deductIngredientsForCompositeItem)(item.product.recipe, productSold.quantity);
+        }
+        else {
+            yield (0, exports.deductStockForSimpleItem)(item._id, productSold.quantity);
+        }
+    }
+});
+exports.processSale = processSale;
 exports.default = {
     createItem: exports.createItem,
     getAllItems: exports.getAllItems,
