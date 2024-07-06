@@ -20,7 +20,7 @@ export const getMenuFrontEnd = (role = 'admin') => {
       { title: 'Inventario', url: 'admin/items', icon: 'bi bi-box2-fill' },
       { title: 'Categorias', url: 'admin/categories', icon: 'bi bi-bookmark-fill' },
       { title: 'recetas', url: 'admin/recipes', icon: 'bi bi-backpack4' },
-      { title: 'ingredientes', url: 'admin/ingredients-list', icon: 'bi bi-egg-fill' },
+      { title: 'ingredientes', url: 'admin/ingredients', icon: 'bi bi-egg-fill' },
     );
   }
 
