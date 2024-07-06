@@ -35,7 +35,7 @@ class Server {
         this.app = (0, express_1.default)();
         this.connectToDatabase();
         this.connectToAwsS3();
-        this.port = process.env.PORT || '3000';
+        this.port = parseInt(process.env.PORT || '3000', 10);
         this.config();
         this.routes();
         this.start();
@@ -83,7 +83,7 @@ class Server {
         });
     }
     start() {
-        this.app.listen(this.port, () => {
+        this.app.listen(this.port, '0.0.0.0', () => {
             console.log(`Servidor escuchando en el puerto ${this.port}`);
         });
     }

@@ -20,13 +20,13 @@ import recipeRoutes from '../routes/recipeRoutes';
 
 export class Server {
   private app: Application;
-  private port: string;
+  private port: number;
 
   constructor() {
     this.app = express();
     this.connectToDatabase();
     this.connectToAwsS3();
-    this.port = process.env.PORT || '3000';
+    this.port = parseInt(process.env.PORT || '3000', 10);
 
     this.config();
     this.routes();
@@ -74,7 +74,7 @@ export class Server {
   }
 
   private start(): void {
-    this.app.listen(this.port, () => {
+    this.app.listen(this.port, '0.0.0.0', () => {
       console.log(`Servidor escuchando en el puerto ${this.port}`);
     });
   }

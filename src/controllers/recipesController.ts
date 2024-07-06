@@ -53,17 +53,17 @@ export const getCompanyRecipes =async (req: Request, res: Response) => {
     }
 };
 
-export const getByIdRecipes =async (req: Request, res: Response) => {
-    try{
+export const getByIdRecipes = async (req: Request, res: Response) => {
+    try {
         const recipe = await Recipe.findById(req.params.recipeId);
         if (!recipe) {
-            return res.status(200).json({ ok:false, message: 'Receta inexistente' });
+            return res.status(404).json({ ok: false, message: 'Receta inexistente' });
         }
 
-        return res.status(200).json({ ok:true, recipe: recipe});
+        return res.status(200).json({ ok: true, data: recipe });
 
-    }catch (error) {
-        res.status(500).json({ message:error });
+    } catch (error) {
+        return res.status(500).json({ ok: false, message: 'Error al obtener la receta', error });
     }
 };
 
@@ -88,10 +88,10 @@ export const deleteRecipe = async (req: Request, res: Response) => {
 export const updateRecipe = async (req: Request, res: Response) => {
     try {
         console.log(req.body);
-        const updatedRecipe = await Recipe.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!updateRecipe) return res.status(404).json({ message: 'Receta no encontrada' });
-        res.status(200).json(updateRecipe);
+        const updatedRecipe = await Recipe.findByIdAndUpdate(req.params.recipeId, req.body, { new: true });
+        if (!updatedRecipe) return res.status(404).json({ message: 'Receta no encontrada' });
+        return res.status(200).json(updatedRecipe);
     } catch (error) {
-        res.status(400).json({ message: error });
+        return res.status(400).json({ message: error });
     }
 };
