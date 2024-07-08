@@ -28,6 +28,7 @@ const productSchema = new mongoose_1.Schema({
     name: { type: String, required: true },
     description: { type: String },
     marca: { type: String, required: true },
+    img: { type: String },
     supplier: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Supplier', required: true },
     company: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Company', required: true },
     categories: [{ type: mongoose_1.Schema.Types.ObjectId, ref: 'Category', required: true }],

@@ -87,6 +87,10 @@ const subirArchivo = (req, res) => {
                         if (!producto) {
                             return res.status(404).json({ error: 'Producto no encontrado' });
                         }
+                        // Asegúrate de que todos los campos necesarios estén presentes
+                        if (producto.isComposite === undefined) {
+                            producto.isComposite = false; // O cualquier valor predeterminado apropiado
+                        }
                         producto.img = url;
                         yield producto.save();
                         break;

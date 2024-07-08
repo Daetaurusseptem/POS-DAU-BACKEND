@@ -4,6 +4,7 @@ export interface ProductDocument extends Document {
   name: string;
   description?: string;
   marca: string;
+  img?: string;
   supplier: Schema.Types.ObjectId;
   company: Schema.Types.ObjectId;
   categories: Schema.Types.ObjectId[];
@@ -15,6 +16,7 @@ const productSchema = new Schema<ProductDocument>({
   name: { type: String, required: true },
   description: { type: String },
   marca: { type: String, required: true },
+  img: { type: String },
   supplier: { type: Schema.Types.ObjectId, ref: 'Supplier', required: true },
   company: { type: Schema.Types.ObjectId, ref: 'Company', required: true },
   categories: [{ type: Schema.Types.ObjectId, ref: 'Category', required: true }],

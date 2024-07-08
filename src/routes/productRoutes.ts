@@ -14,7 +14,7 @@ import { validarSysAdmin, verifyToken } from '../middleware/jwtMiddleware'; // A
 
 const router = express.Router();
 
-router.post('/:companyId', createProduct);
+router.post('/:companyId', verifyToken, createProduct);
 router.get('/', getAllProducts);
 router.get('/company/:id', getAllCompanyProducts);
 router.get('/company/sysadmin/:companyId', [verifyToken, validarSysAdmin], getAllProductsOfCompanyForSysadmin); // Nueva ruta

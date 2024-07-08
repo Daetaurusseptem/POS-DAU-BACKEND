@@ -20,9 +20,9 @@ export const createProduct = async (req: Request, res: Response) => {
         const newProduct = new Product(req.body);
         const savedProduct = await newProduct.save();
 
-         // subirImg
-         req.params.id = newProduct._id!;
-         req.params.tipo = 'productos';
+        // subirImg
+        req.params.id = newProduct._id!;
+        req.params.tipo = 'productos';
 
         return res.status(201).json({ ok: true, savedProduct });
     } catch (error) {
