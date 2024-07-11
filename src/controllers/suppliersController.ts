@@ -25,9 +25,9 @@ export const createSupplier = async (req: Request, res: Response) => {
         });
  
         const savedSupplier = await newSupplier.save();
-        res.status(201).json(savedSupplier);
+        return res.status(201).json(savedSupplier);
     } catch (error) {
-        res.status(400).json({ message: error });
+        return res.status(400).json({ message: error });
     }
 };
 // Obtener todos los proveedores

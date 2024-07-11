@@ -40,10 +40,10 @@ const createSupplier = (req, res) => __awaiter(void 0, void 0, void 0, function*
         }
         const newSupplier = new Supplier_1.default(Object.assign(Object.assign({}, supplierData), { company: companyId }));
         const savedSupplier = yield newSupplier.save();
-        res.status(201).json(savedSupplier);
+        return res.status(201).json(savedSupplier);
     }
     catch (error) {
-        res.status(400).json({ message: error });
+        return res.status(400).json({ message: error });
     }
 });
 exports.createSupplier = createSupplier;
