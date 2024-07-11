@@ -19,6 +19,7 @@ const CashRegister_1 = __importDefault(require("../models-mongoose/CashRegister"
 const Item_1 = __importDefault(require("../models-mongoose/Item"));
 const recipes_1 = __importDefault(require("../models-mongoose/recipes"));
 const Ingredient_1 = __importDefault(require("../models-mongoose/Ingredient"));
+const User_1 = __importDefault(require("../models-mongoose/User"));
 // Obtener todas las ventas
 const getAllSales = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -85,12 +86,23 @@ const processSale = (productsSold) => __awaiter(void 0, void 0, void 0, function
 });
 const createSale = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { user, total, discount, productsSold, paymentMethod, } = req.body;
-        // Obtener la caja abierta del usuario 
+        const { user, total, discount, productsSold, paymentMethod } = req.body;
+        console.log(user, total, discount, productsSold, paymentMethod);
+        // Obtener la caja abierta del usuario
         const cashRegister = yield CashRegister_1.default.findOne({ user, closed: false });
         if (!cashRegister) {
             return res.status(400).json({ message: 'No open cash register found for this user' });
         }
+        // Obtener el usuario y la compañía
+        const userDoc = yield User_1.default.findById(user).populate('companyId');
+        if (!userDoc) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        const companyId = userDoc.companyId;
+        if (!companyId) {
+            return res.status(400).json({ message: 'User does not belong to any company' });
+        }
+        console.log(companyId);
         // Procesar la venta y actualizar el inventario
         yield processSale(productsSold);
         // Crear una nueva venta
@@ -100,7 +112,8 @@ const createSale = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             discount,
             productsSold,
             date: new Date(),
-            paymentMethod
+            paymentMethod,
+            company: companyId
         });
         const savedSale = yield newSale.save();
         // Actualizar los pagos en la caja

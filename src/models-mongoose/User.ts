@@ -22,7 +22,7 @@ const userSchema = new Schema<UserDocument>({
   },
   companyId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // Asegúrate de que esta es la referencia correcta al modelo de usuario
+    ref: 'Empresa', // Asegúrate de que esta es la referencia correcta al modelo de usuario
     required: false,
 },
   password: {

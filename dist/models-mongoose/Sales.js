@@ -79,5 +79,6 @@ const saleSchema = new mongoose_1.Schema({
     change: {
         type: Number,
     },
+    company: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Company', required: true }
 });
 exports.default = mongoose_1.default.model('Sale', saleSchema);

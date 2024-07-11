@@ -16,6 +16,7 @@ export interface SaleDocument extends Document {
   paymentReference?: string;
   receivedAmount?: number;
   change?: number;
+  company: mongoose.Types.ObjectId; // Añadido el campo company
 }
 
 const saleSchema = new Schema<SaleDocument>({
@@ -73,6 +74,7 @@ const saleSchema = new Schema<SaleDocument>({
   change: {
     type: Number,
   },
+  company: { type: Schema.Types.ObjectId, ref: 'Company', required: true }
 });
 
 export default mongoose.model<SaleDocument>('Sale', saleSchema);

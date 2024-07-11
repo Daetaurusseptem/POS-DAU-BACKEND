@@ -34,7 +34,7 @@ const userSchema = new mongoose_1.Schema({
     },
     companyId: {
         type: mongoose_1.default.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'Empresa',
         required: false,
     },
     password: {

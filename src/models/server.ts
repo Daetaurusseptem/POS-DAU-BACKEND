@@ -17,6 +17,7 @@ import cashRegisterRoutes from '../routes/cashRegister';
 import dailySalesRoutes from '../routes/dailySaleRoutes';
 import ingredientRoutes from '../routes/ingredientRoutes';
 import recipeRoutes from '../routes/recipeRoutes';
+import statisticsRoutes from '../routes/statisticsRoutes';
 
 export class Server {
   private app: Application;
@@ -54,6 +55,7 @@ export class Server {
     this.app.use('/api', dailySalesRoutes); // Añade la nueva ruta
     this.app.use('/api/ingredients', ingredientRoutes);
     this.app.use('/api/recipes', recipeRoutes);
+    this.app.use('/api/statistics', statisticsRoutes);
   }
 
   private async connectToAwsS3(): Promise<void> {

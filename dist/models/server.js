@@ -30,6 +30,7 @@ const cashRegister_1 = __importDefault(require("../routes/cashRegister"));
 const dailySaleRoutes_1 = __importDefault(require("../routes/dailySaleRoutes"));
 const ingredientRoutes_1 = __importDefault(require("../routes/ingredientRoutes"));
 const recipeRoutes_1 = __importDefault(require("../routes/recipeRoutes"));
+const statisticsRoutes_1 = __importDefault(require("../routes/statisticsRoutes"));
 class Server {
     constructor() {
         this.app = (0, express_1.default)();
@@ -60,6 +61,7 @@ class Server {
         this.app.use('/api', dailySaleRoutes_1.default); // Añade la nueva ruta
         this.app.use('/api/ingredients', ingredientRoutes_1.default);
         this.app.use('/api/recipes', recipeRoutes_1.default);
+        this.app.use('/api/statistics', statisticsRoutes_1.default);
     }
     connectToAwsS3() {
         return __awaiter(this, void 0, void 0, function* () {

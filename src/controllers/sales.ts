@@ -6,6 +6,7 @@ import CashRegister from '../models-mongoose/CashRegister';
 import Item from '../models-mongoose/Item';
 import recipes from '../models-mongoose/recipes';
 import Ingredient from '../models-mongoose/Ingredient';
+import User from '../models-mongoose/User';
 
 
 
@@ -72,13 +73,25 @@ const processSale = async (productsSold: any[]) => {
 
 export const createSale = async (req: Request, res: Response) => {
   try {
-    const { user, total, discount, productsSold, paymentMethod, } = req.body;
-
-    // Obtener la caja abierta del usuario 
+    const { user, total, discount, productsSold, paymentMethod } = req.body;
+    console.log(user, total, discount, productsSold, paymentMethod);
+    // Obtener la caja abierta del usuario
     const cashRegister = await CashRegister.findOne({ user, closed: false });
     if (!cashRegister) {
       return res.status(400).json({ message: 'No open cash register found for this user' });
     }
+
+    // Obtener el usuario y la compañía
+    const userDoc = await User.findById(user).populate('companyId');
+    if (!userDoc) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const companyId = userDoc.companyId;
+    if (!companyId) {
+      return res.status(400).json({ message: 'User does not belong to any company' });
+    }
+    console.log(companyId);
 
     // Procesar la venta y actualizar el inventario
     await processSale(productsSold);
@@ -90,7 +103,8 @@ export const createSale = async (req: Request, res: Response) => {
       discount,
       productsSold,
       date: new Date(),
-      paymentMethod
+      paymentMethod,
+      company: companyId
     });
 
     const savedSale = await newSale.save();

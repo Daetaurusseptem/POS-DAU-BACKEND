@@ -12,13 +12,13 @@ router.get('/', getIngredients);
 // Ruta para obtener un ingrediente por ID
 router.get('/:id', getIngredientById);
 
-router.get('/company/:companyId',[verifyToken, validarAdminCompany], getIngredientByCompanyId);
+router.get('/company/:companyId',[ verifyToken, validarAdminCompany ], getIngredientByCompanyId);
 
 // Ruta para actualizar un ingrediente por ID
 router.put('/:id', updateIngredient);
 
 // Ruta para eliminar un ingrediente por ID
-router.delete('/:id', deleteIngredient);
-
+router.delete('/:id', deleteIngredient); 
+ 
 
 export default router;
