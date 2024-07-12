@@ -248,8 +248,9 @@ export const validarEmpresaUsuario = async (req: any, res: Response, next: NextF
                 msg: 'Usuario no existe'
             });
         }
- 
         const empresaDB = await Empresa.findById(empresaId);
+        console.log('usuario: ',usuarioDB);
+        console.log('empresa: ',empresaDB);
 
         if (!empresaDB || !usuarioDB.companyId==empresaId) {
             return res.status(403).json({

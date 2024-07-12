@@ -13,7 +13,7 @@ import User from '../models-mongoose/User';
 // Obtener todas las ventas
 export const getAllSales = async (req: Request, res: Response) => {
     try {
-        const sales = await Sale.find().populate('user').populate('productsSold.productId');
+        const sales = await Sale.find().populate('user').populate('productsSold.product');
         res.status(200).json(sales);
     } catch (error) {
         res.status(500).json({ message: error });
@@ -23,9 +23,9 @@ export const getAllSales = async (req: Request, res: Response) => {
 // Obtener una venta por ID
 export const getSaleById = async (req: Request, res: Response) => {
     try {
-        const sale = await Sale.findById(req.params.id).populate('user').populate('productsSold.productId');
+        const sale = await Sale.findById(req.params.id).populate('user').populate('productsSold.product');
         if (!sale) return res.status(404).json({ message: 'Venta no encontrada' });
-        res.status(200).json(sale);
+        res.status(200).json({ok:true,sale});
     } catch (error) {
         res.status(500).json({ message: error });
     }
@@ -70,11 +70,11 @@ const processSale = async (productsSold: any[]) => {
     }
   }
 };
-
 export const createSale = async (req: Request, res: Response) => {
   try {
-    const { user, total, discount, productsSold, paymentMethod } = req.body;
-    console.log(user, total, discount, productsSold, paymentMethod);
+    const { user, total, discount, productsSold, paymentMethod, receivedAmount, change, paymentReference } = req.body;
+    console.log(user, total, discount, productsSold, paymentMethod, receivedAmount, change, paymentReference);
+
     // Obtener la caja abierta del usuario
     const cashRegister = await CashRegister.findOne({ user, closed: false });
     if (!cashRegister) {
@@ -97,7 +97,7 @@ export const createSale = async (req: Request, res: Response) => {
     await processSale(productsSold);
 
     // Crear una nueva venta
-    const newSale = new Sale({
+    const newSaleData: any = {
       user,
       total,
       discount,
@@ -105,7 +105,16 @@ export const createSale = async (req: Request, res: Response) => {
       date: new Date(),
       paymentMethod,
       company: companyId
-    });
+    };
+
+    if (paymentMethod === 'cash') {
+      newSaleData.receivedAmount = receivedAmount;
+      newSaleData.change = change;
+    } else if (paymentMethod === 'credit') {
+      newSaleData.paymentReference = paymentReference;
+    }
+
+    const newSale = new Sale(newSaleData);
 
     const savedSale = await newSale.save();
 
@@ -147,4 +156,3 @@ export const createSale = async (req: Request, res: Response) => {
     return res.status(500).json({ message: 'Error creating sale', error });
   }
 };
-

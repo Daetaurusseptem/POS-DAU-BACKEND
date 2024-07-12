@@ -24,4 +24,6 @@ const productSchema = new Schema<ProductDocument>({
   recipe: { type: Schema.Types.ObjectId, ref: 'Recipe' }
 });
 
+
+
 export default mongoose.model<ProductDocument>('Product', productSchema);

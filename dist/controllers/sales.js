@@ -23,7 +23,7 @@ const User_1 = __importDefault(require("../models-mongoose/User"));
 // Obtener todas las ventas
 const getAllSales = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const sales = yield Sales_1.default.find().populate('user').populate('productsSold.productId');
+        const sales = yield Sales_1.default.find().populate('user').populate('productsSold.product');
         res.status(200).json(sales);
     }
     catch (error) {
@@ -34,10 +34,10 @@ exports.getAllSales = getAllSales;
 // Obtener una venta por ID
 const getSaleById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const sale = yield Sales_1.default.findById(req.params.id).populate('user').populate('productsSold.productId');
+        const sale = yield Sales_1.default.findById(req.params.id).populate('user').populate('productsSold.product');
         if (!sale)
             return res.status(404).json({ message: 'Venta no encontrada' });
-        res.status(200).json(sale);
+        res.status(200).json({ ok: true, sale });
     }
     catch (error) {
         res.status(500).json({ message: error });
@@ -86,8 +86,8 @@ const processSale = (productsSold) => __awaiter(void 0, void 0, void 0, function
 });
 const createSale = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { user, total, discount, productsSold, paymentMethod } = req.body;
-        console.log(user, total, discount, productsSold, paymentMethod);
+        const { user, total, discount, productsSold, paymentMethod, receivedAmount, change, paymentReference } = req.body;
+        console.log(user, total, discount, productsSold, paymentMethod, receivedAmount, change, paymentReference);
         // Obtener la caja abierta del usuario
         const cashRegister = yield CashRegister_1.default.findOne({ user, closed: false });
         if (!cashRegister) {
@@ -106,7 +106,7 @@ const createSale = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         // Procesar la venta y actualizar el inventario
         yield processSale(productsSold);
         // Crear una nueva venta
-        const newSale = new Sales_1.default({
+        const newSaleData = {
             user,
             total,
             discount,
@@ -114,7 +114,15 @@ const createSale = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             date: new Date(),
             paymentMethod,
             company: companyId
-        });
+        };
+        if (paymentMethod === 'cash') {
+            newSaleData.receivedAmount = receivedAmount;
+            newSaleData.change = change;
+        }
+        else if (paymentMethod === 'credit') {
+            newSaleData.paymentReference = paymentReference;
+        }
+        const newSale = new Sales_1.default(newSaleData);
         const savedSale = yield newSale.save();
         // Actualizar los pagos en la caja
         let cashTotal = 0;

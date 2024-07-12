@@ -211,6 +211,8 @@ const validarEmpresaUsuario = (req, res, next) => __awaiter(void 0, void 0, void
             });
         }
         const empresaDB = yield Company_1.default.findById(empresaId);
+        console.log('usuario: ', usuarioDB);
+        console.log('empresa: ', empresaDB);
         if (!empresaDB || !usuarioDB.companyId == empresaId) {
             return res.status(403).json({
                 ok: false,

@@ -29,7 +29,7 @@ export const search = async (req: Request, res: Response) => {
         let results;
 
         if (collection === 'products' || collection === 'items') {
-            const additionalFilter = collection === 'products' ? { categories: req.body.categories } : { productId: req.body.productId };
+            const additionalFilter = collection === 'products' ? { categories: req.body.categories } : { product: req.body.product };
             results = await model.find({ ...additionalFilter, companyId, name: regex });
         } else {
             results = await model.find({ companyId, name: regex });

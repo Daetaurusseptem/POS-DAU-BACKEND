@@ -33,7 +33,7 @@ const search = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let results;
         if (collection === 'products' || collection === 'items') {
-            const additionalFilter = collection === 'products' ? { categories: req.body.categories } : { productId: req.body.productId };
+            const additionalFilter = collection === 'products' ? { categories: req.body.categories } : { product: req.body.product };
             results = yield model.find(Object.assign(Object.assign({}, additionalFilter), { companyId, name: regex }));
         }
         else {

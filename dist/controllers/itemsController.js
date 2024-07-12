@@ -23,9 +23,9 @@ const Ingredient_1 = __importDefault(require("../models-mongoose/Ingredient"));
 const createItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         console.log('crear item', req.body);
-        const productId = req.body.product;
+        const product = req.body.product;
         const { empresaId } = req.params;
-        const producto = yield Products_1.default.findById(productId);
+        const producto = yield Products_1.default.findById(product);
         const empresa = yield Company_1.default.findById(empresaId);
         if (!producto) {
             return res.status(404).json({

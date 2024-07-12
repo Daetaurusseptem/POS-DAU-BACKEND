@@ -12,7 +12,7 @@ export const getDailySales = async (req: Request, res: Response) => {
 
     const dailySales = await Sale.find({
       date: { $gte: startOfDay, $lte: endOfDay }
-    }).populate('user').populate('productsSold.productId');
+    }).populate('user').populate('productsSold.product');
 
     res.status(200).json(dailySales);
   } catch (error) {

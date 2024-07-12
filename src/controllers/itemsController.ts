@@ -12,9 +12,9 @@ import Ingredient from '../models-mongoose/Ingredient';
 export const createItem = async (req: Request, res: Response) => {
     try {
         console.log('crear item', req.body);
-        const productId = req.body.product
+        const product = req.body.product
         const {empresaId} = req.params
-        const producto=await Product.findById(productId)
+        const producto=await Product.findById(product)
         const empresa=await Empresa.findById(empresaId)
 
 

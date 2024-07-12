@@ -9,5 +9,5 @@ const jwtMiddleware_1 = require("../middleware/jwtMiddleware");
 const router = express_1.default.Router();
 router.post('/', jwtMiddleware_1.verifyToken, sales_1.createSale);
 router.get('/', sales_1.getAllSales);
-router.get('/:id', sales_1.getSaleById);
+router.get('/:id', [jwtMiddleware_1.verifyToken], sales_1.getSaleById);
 exports.default = router;

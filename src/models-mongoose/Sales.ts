@@ -6,8 +6,7 @@ export interface SaleDocument extends Document {
   total: number;
   discount: number;
   productsSold: {
-    paymentMethod: any;
-    productId: mongoose.Types.ObjectId;
+    product: mongoose.Types.ObjectId;
     quantity: number;
     unitPrice: number;
     subtotal: number;
@@ -16,13 +15,13 @@ export interface SaleDocument extends Document {
   paymentReference?: string;
   receivedAmount?: number;
   change?: number;
-  company: mongoose.Types.ObjectId; // Añadido el campo company
+  company: mongoose.Types.ObjectId;
 }
 
 const saleSchema = new Schema<SaleDocument>({
   user: {
     type: Schema.Types.ObjectId,
-    ref: 'User', // Referencia al modelo de usuario
+    ref: 'User',
     required: true,
   },
   date: {
@@ -40,14 +39,14 @@ const saleSchema = new Schema<SaleDocument>({
   },
   productsSold: [
     {
-      productId: {
+      product: {
         type: mongoose.Types.ObjectId,
         ref: 'Product',
         required: true,
       },
       quantity: {
         type: Number,
-        required: true,
+        required: true, 
         min: 1,
       },
       unitPrice: {
@@ -74,7 +73,11 @@ const saleSchema = new Schema<SaleDocument>({
   change: {
     type: Number,
   },
-  company: { type: Schema.Types.ObjectId, ref: 'Company', required: true }
+  company: {
+    type: Schema.Types.ObjectId,
+    ref: 'Company',
+    required: true,
+  },
 });
 
 export default mongoose.model<SaleDocument>('Sale', saleSchema);

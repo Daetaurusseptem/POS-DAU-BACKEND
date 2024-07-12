@@ -30,14 +30,14 @@ export const getItemsStatistics = async (req: Request, res: Response) => {
     const items = await Item.aggregate([
       {
         $group: {
-          _id: "$productId",
+          _id: "$product",
           totalStock: { $sum: "$stock" },
           totalValue: { $sum: { $multiply: ["$stock", "$price"] } },
           count: { $sum: 1 }
         }
       },
       { $sort: { totalStock: -1 } }
-    ]);
+    ] ); 
 
     res.status(200).json({ ok: true, items });
   } catch (error) {
@@ -83,14 +83,14 @@ export const getTopSellingProductsByWeek = async (req: Request, res: Response) =
         },
         {
           $group: {
-            _id: { week: "$week", productId: "$productsSold.productId" },
+            _id: { week: "$week", product: "$productsSold.product" },
             totalQuantity: { $sum: "$productsSold.quantity" }
           }
         },
         {
           $lookup: {
             from: "products",
-            localField: "_id.productId",
+            localField: "_id.product",
             foreignField: "_id",
             as: "product"
           }
