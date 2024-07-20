@@ -21,6 +21,7 @@ export const getMenuFrontEnd = (role = 'admin') => {
       { title: 'Categorias', url: 'admin/categories', icon: 'bi bi-bookmark-fill' },
       { title: 'recetas', url: 'admin/recipes', icon: 'bi bi-backpack4' },
       { title: 'ingredientes', url: 'admin/ingredients', icon: 'bi bi-egg-fill' },
+      { title: 'Estadisticas', url: 'admin/statistics', icon: 'bi bi-bar-chart-fill' },
     );
   }
 

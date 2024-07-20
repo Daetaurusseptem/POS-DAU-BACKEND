@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import Sale from '../models-mongoose/Sales';
 import Item from '../models-mongoose/Item';
-import Sales from '../models-mongoose/Sales';
 import mongoose from 'mongoose';
 import Empresa from '../models-mongoose/Company';
+import Ingredient from '../models-mongoose/Ingredient';
 
 export const getSalesStatistics = async (req: Request, res: Response) => {
   try {
@@ -37,7 +37,7 @@ export const getItemsStatistics = async (req: Request, res: Response) => {
         }
       },
       { $sort: { totalStock: -1 } }
-    ] ); 
+    ]);
 
     res.status(200).json({ ok: true, items });
   } catch (error) {
@@ -45,69 +45,88 @@ export const getItemsStatistics = async (req: Request, res: Response) => {
   }
 };
 
-export const getTopSellingProductsByWeek = async (req: Request, res: Response) => {
-    try {
-      const { year, week, companyId } = req.query;
-  
-      // Verificar que year, week y companyId están presentes
-      if (!year || !week || !companyId) {
-        return res.status(400).json({ message: 'Year, week, and companyId are required' });
-      }
-  
-      const startDate = new Date(`${year}-01-01`);
-      const endDate = new Date(`${year}-12-31`);
-  
-      // Realizar la agregación para obtener los productos más vendidos por semana
-      const sales = await Sale.aggregate([
-        {
-          $match: {
-            date: {
-              $gte: startDate,
-              $lte: endDate
-            },
-            company: new mongoose.Types.ObjectId(companyId as string)
-          }
-        },
-        {
-          $addFields: {
-            week: { $isoWeek: "$date" }
-          }
-        },
-        {
-          $match: {
-            week: parseInt(week as string)
-          }
-        },
-        {
-          $unwind: "$productsSold"
-        },
-        {
-          $group: {
-            _id: { week: "$week", product: "$productsSold.product" },
-            totalQuantity: { $sum: "$productsSold.quantity" }
-          }
-        },
-        {
-          $lookup: {
-            from: "products",
-            localField: "_id.product",
-            foreignField: "_id",
-            as: "product"
-          }
-        },
-        {
-          $unwind: "$product"
-        },
-        {
-          $sort: { totalQuantity: -1 }
+export const getIngredientsStatistics = async (req: Request, res: Response) => {
+  try {
+    const ingredients = await Ingredient.aggregate([
+      {
+        $group: {
+          _id: "$name",
+          totalStock: { $sum: "$stock" },
+          totalValue: { $sum: { $multiply: ["$stock", "$pricePerUnit"] } },
+          count: { $sum: 1 }
         }
-      ]);
-  
-      console.log(sales); // Agrega este log para verificar los datos
-  
-      res.status(200).json({ ok: true, sales });
-    } catch (error) {
-      res.status(500).json({ message: 'Error fetching top selling products by week', error });
+      },
+      { $sort: { totalStock: -1 } }
+    ]);
+
+    res.status(200).json({ ok: true, ingredients });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching ingredients statistics', error });
+  }
+};
+
+export const getTopSellingProductsByWeek = async (req: Request, res: Response) => {
+  try {
+    const { year, week, companyId } = req.query;
+
+    // Verificar que year, week y companyId están presentes
+    if (!year || !week || !companyId) {
+      return res.status(400).json({ message: 'Year, week, and companyId are required' });
     }
-  };
-  
+
+    const startDate = new Date(`${year}-01-01`);
+    const endDate = new Date(`${year}-12-31`);
+
+    // Realizar la agregación para obtener los productos más vendidos por semana
+    const sales = await Sale.aggregate([
+      {
+        $match: {
+          date: {
+            $gte: startDate,
+            $lte: endDate
+          },
+          company: new mongoose.Types.ObjectId(companyId as string)
+        }
+      },
+      {
+        $addFields: {
+          week: { $isoWeek: "$date" }
+        }
+      },
+      {
+        $match: {
+          week: parseInt(week as string)
+        }
+      },
+      {
+        $unwind: "$productsSold"
+      },
+      {
+        $group: {
+          _id: { week: "$week", product: "$productsSold.product" },
+          totalQuantity: { $sum: "$productsSold.quantity" }
+        }
+      },
+      {
+        $lookup: {
+          from: "products",
+          localField: "_id.product",
+          foreignField: "_id",
+          as: "product"
+        }
+      },
+      {
+        $unwind: "$product"
+      },
+      {
+        $sort: { totalQuantity: -1 }
+      }
+    ]);
+
+    console.log(sales); // Agrega este log para verificar los datos
+
+    res.status(200).json({ ok: true, sales });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching top selling products by week', error });
+  }
+};
