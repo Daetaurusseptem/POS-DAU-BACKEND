@@ -211,9 +211,9 @@ const getItemsByCategory = (req, res) => __awaiter(void 0, void 0, void 0, funct
         // Obtener los IDs de los productos encontrados
         const productIds = products.map(product => product._id);
         // Calcular el total de ítems
-        const totalItems = yield Item_1.default.countDocuments({ product: { $in: productIds } });
+        const totalItems = yield Item_1.default.countDocuments({ product: { $in: productIds }, stock: { $gt: 0 } });
         // Buscar ítems que correspondan a los productos encontrados con paginación
-        const items = yield Item_1.default.find({ product: { $in: productIds } })
+        const items = yield Item_1.default.find({ product: { $in: productIds }, stock: { $gt: 0 } })
             .populate('product')
             .populate('company')
             .skip((Number(page) - 1) * Number(limit))

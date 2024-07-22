@@ -196,7 +196,8 @@ export const getItems = async (req: Request, res: Response) => {
   export const getItemsByCategory = async (req: Request, res: Response) => {
     try {
       const { category, search = '', page = 1, limit = 10 } = req.query;
-      console.log(category,search,page,limit);
+      console.log(category, search, page, limit);
+  
       if (!category) {
         return res.status(400).json({ message: 'Category is required' });
       }
@@ -209,23 +210,22 @@ export const getItems = async (req: Request, res: Response) => {
   
       // Buscar productos por categoría y término de búsqueda
       const products = await Product.find(query);
-      
   
       // Obtener los IDs de los productos encontrados
       const productIds = products.map(product => product._id);
   
       // Calcular el total de ítems
-      const totalItems = await Item.countDocuments({ product: { $in: productIds } });
+      const totalItems = await Item.countDocuments({ product: { $in: productIds }, stock: { $gt: 0 } });
   
       // Buscar ítems que correspondan a los productos encontrados con paginación
-      const items = await Item.find({ product: { $in: productIds } })
+      const items = await Item.find({ product: { $in: productIds }, stock: { $gt: 0 } })
         .populate('product')
         .populate('company')
         .skip((Number(page) - 1) * Number(limit))
         .limit(Number(limit));
   
-        console.log(items);
-
+      console.log(items);
+  
       res.status(200).json({
         items,
         totalItems,
@@ -237,6 +237,7 @@ export const getItems = async (req: Request, res: Response) => {
       res.status(500).json({ message: 'Error fetching items', error });
     }
   };
+  
   
 
 

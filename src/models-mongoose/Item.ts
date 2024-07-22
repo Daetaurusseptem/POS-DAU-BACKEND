@@ -9,10 +9,12 @@ export interface ItemDocument extends Document {
   discount: number;
   receivedDate: Date;
   company: Schema.Types.ObjectId;
+  bar_code:string
 }
 
 const itemSchema = new Schema<ItemDocument>({
   name: { type: String, required: true },
+  bar_code: { type: String, required: false },
   company: { type: Schema.Types.ObjectId, ref: 'Empresa', required: true },
   product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
   price: { type: Number, required: true, min:0 },
@@ -21,5 +23,5 @@ const itemSchema = new Schema<ItemDocument>({
   receivedDate: { type: Date, required: true },
   expirationDate: { type: Date }
 });
-
+ 
 export default mongoose.model<ItemDocument>('Item', itemSchema);
