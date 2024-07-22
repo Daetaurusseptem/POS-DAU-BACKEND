@@ -14,6 +14,7 @@ export const getMenuFrontEnd = (role = 'admin') => {
     menu[0].icon = 'bi bi-cone-striped';
     menu[0].submenu.unshift(
       //{ title: 'Empresa', url: 'admin/company', icon: 'bi bi-building-fill' },
+      { title: 'Home', url: 'admin', icon: 'bi bi-house-fill' },
       { title: 'Usuarios', url: 'admin/users', icon: 'bi bi-people-fill' },
       { title: 'Productos', url: 'admin/products', icon: 'bi bi-bag-fill' },
       { title: 'Proveedores', url: 'admin/suppliers', icon: 'bi bi-file-earmark-person' },
