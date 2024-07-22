@@ -69,7 +69,6 @@ export const getTopSellingProductsByWeek = async (req: Request, res: Response) =
   try {
     const { year, week, companyId } = req.query;
 
-    // Verificar que year, week y companyId están presentes
     if (!year || !week || !companyId) {
       return res.status(400).json({ message: 'Year, week, and companyId are required' });
     }
@@ -77,7 +76,6 @@ export const getTopSellingProductsByWeek = async (req: Request, res: Response) =
     const startDate = new Date(`${year}-01-01`);
     const endDate = new Date(`${year}-12-31`);
 
-    // Realizar la agregación para obtener los productos más vendidos por semana
     const sales = await Sale.aggregate([
       {
         $match: {
@@ -123,10 +121,56 @@ export const getTopSellingProductsByWeek = async (req: Request, res: Response) =
       }
     ]);
 
-    console.log(sales); // Agrega este log para verificar los datos
-
     res.status(200).json({ ok: true, sales });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching top selling products by week', error });
+  }
+};
+
+export const getIngredientsStatisticsByWeek = async (req: Request, res: Response) => {
+  try {
+    const { year, week, companyId } = req.query;
+
+    if (!year || !week || !companyId) {
+      return res.status(400).json({ message: 'Year, week, and companyId are required' });
+    }
+
+    const startDate = new Date(`${year}-01-01`);
+    const endDate = new Date(`${year}-12-31`);
+
+    const ingredients = await Ingredient.aggregate([
+      {
+        $match: {
+          date: {
+            $gte: startDate,
+            $lte: endDate
+          },
+          company: new mongoose.Types.ObjectId(companyId as string)
+        }
+      },
+      {
+        $addFields: {
+          week: { $isoWeek: "$date" }
+        }
+      },
+      {
+        $match: {
+          week: parseInt(week as string)
+        }
+      },
+      {
+        $group: {
+          _id: "$name",
+          totalStock: { $sum: "$stock" },
+          totalValue: { $sum: { $multiply: ["$stock", "$pricePerUnit"] } },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { totalStock: -1 } }
+    ]);
+
+    res.status(200).json({ ok: true, ingredients });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching ingredients statistics by week', error });
   }
 };
