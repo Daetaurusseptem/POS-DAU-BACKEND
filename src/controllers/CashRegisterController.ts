@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import CashRegister from '../models-mongoose/CashRegister';
 import Sale from '../models-mongoose/Sales';
+import User from '../models-mongoose/User';
 
 // Registrar el dinero inicial y abrir caja
 export const openCashRegister = async (req: Request, res: Response) => {
@@ -136,5 +137,53 @@ export const getOpenCashRegister = async (req: Request, res: Response) => {
     res.status(200).json(openCashRegister);
   } catch (error) {
     res.status(500).json({ message: 'Error retrieving open cash register', error });
+  }
+};
+
+export const getUserCashRegistersByStartDate = async (req: Request, res: Response) => {
+  try {
+      const { userId } = req.params;
+      const { startDate } = req.query;
+
+      const userDb = await User.findById(userId);
+      if(!userDb) {
+        return res.status(404).json({ message: 'Usuario no encontrado' });
+      }
+
+      if (!startDate) {
+          return res.status(400).json({ message: 'startDate es requerido' });
+      }
+
+      const start = new Date(startDate as string);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(startDate as string);
+      end.setHours(23, 59, 59, 999);
+
+      const cashRegisters = await CashRegister.find({
+          user: userId,
+          startDate: { $gte: start, $lte: end }
+      })
+      .populate('user')
+      .populate('sales');
+
+      res.status(200).json(cashRegisters);
+  } catch (error) {
+      res.status(500).json({ message: 'Error al obtener las cajas', error });
+  }
+};
+export const getSalesByCashRegister = async (req: Request, res: Response) => {
+  try {
+      const { cashRegisterId } = req.params;
+
+      const cashRegister = await CashRegister.findById(cashRegisterId);
+      if (!cashRegister) {
+          return res.status(404).json({ message: 'Caja no encontrada' });
+      }
+
+      const sales = await Sale.find({ _id: { $in: cashRegister.sales } }).populate('user').populate('productsSold.product');
+
+      res.status(200).json(sales);
+  } catch (error) {
+      res.status(500).json({ message: 'Error al obtener las ventas', error });
   }
 };

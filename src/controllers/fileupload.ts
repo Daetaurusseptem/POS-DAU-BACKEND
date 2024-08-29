@@ -1,124 +1,113 @@
-import AWS from 'aws-sdk';
-import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
-import multer from 'multer';
-import multerS3 from 'multer-s3';
+import { admin, bucket } from '../config/firebase';
 import { Request, Response } from 'express';
+import multer from 'multer';
+import path from 'path';
 import User from "../models-mongoose/User";
 import Empresa from "../models-mongoose/Company";
 import Product from "../models-mongoose/Products";
 
-// Configuración de AWS
-AWS.config.update({
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    region: 'us-east-2'
-});
+// Configurar multer para manejar la subida en memoria
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
-const s3 = new S3Client({
-    region: 'us-east-2',
-    credentials: {
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    }
-});
-
-// Configuración de multer-s3
-const upload = multer({
-    storage: multerS3({
-        s3: s3,
-        bucket: 'poscconor',
-        key: function (req: Request, file, cb) {
-            const tipo = req.params.tipo; // Tipo de archivo (usuario, producto, empresa)
-            const id = req.params.id; // ID de MongoDB
-            const nombreArchivo = `${Date.now().toString()}-${file.originalname}`;
-            const rutaArchivo = `img/${tipo}/${id}/${nombreArchivo}`;
-            cb(null, rutaArchivo);
-        }
-    })
-});
-
-// Controlador de carga
+// Controlador para subir archivos
 export const subirArchivo = (req: Request, res: Response) => {
-    const singleUpload = upload.single('img');
+const singleUpload = upload.single('img');
 
-    singleUpload(req, res, async function (error) {
-        try {
-            if (error) {
-                return res.status(500).json({ error: error.message });
+  singleUpload(req, res, async function (error) {
+    try {
+      if (error) {
+        return res.status(500).json({ error: error.message });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ error: 'Archivo no encontrado' });
+      }
+
+      const { tipo, id } = req.params;
+      const nombreArchivo = `${Date.now()}-${path.basename(req.file.originalname)}`;
+      const file = bucket.file(`img/${tipo}/${id}/${nombreArchivo}`);
+
+      const stream = file.createWriteStream({
+        metadata: {
+          contentType: req.file.mimetype,
+        },
+      });
+
+      stream.on('error', (err) => {
+        console.error('Error subiendo archivo a Firebase', err);
+        return res.status(500).json({ error: 'Error subiendo archivo a Firebase', err });
+      });
+ 
+      stream.on('finish', async () => {
+        const url = await file.getSignedUrl({
+          action: 'read',
+          expires: '03-01-2500'
+        });
+
+        let urlImagenActual;
+
+        // Aquí se actualiza la base de datos
+        switch (tipo) {
+          case 'usuarios':
+            const user = await User.findById(id);
+            urlImagenActual = user ? user.img : null;
+            if (!user) {
+              return res.status(404).json({ error: 'Usuario no encontrado' });
             }
-    
-            if (!req.file) {
-                return res.status(400).json({ error: 'Archivo no encontrado' });
+            user.img = url[0];
+            await user.save();
+            break;
+          case 'empresas':
+            const empresa = await Empresa.findById(id);
+            urlImagenActual = empresa ? empresa.img : null;
+            if (!empresa) {
+              return res.status(404).json({ error: 'Empresa no encontrada' });
             }
-    
-            const url = req.file.location;
-            const { tipo, id } = req.params;
-            let urlImagenActual;
-            
-            switch (tipo) {
-                case 'usuarios':
-                    const user = await User.findById(id);
-                    urlImagenActual = user ? user.img : null;
-                    if (!user) {
-                        return res.status(404).json({ error: 'Usuario no encontrado' });
-                    }
-                    user.img = url;
-                    await user.save();
-                    break;
-                case 'empresas':
-                    const empresa = await Empresa.findById(id);
-                    urlImagenActual = empresa ? empresa.img : null;
-                    if (!empresa) {
-                        return res.status(404).json({ error: 'Empresa no encontrada' });
-                    }
-                    empresa.img = url;
-                    await empresa.save();
-                    break;
-                case 'productos':
-                    const producto = await Product.findById(id);
-                    urlImagenActual = producto ? producto.img : null;
-                    if (!producto) {
-                        return res.status(404).json({ error: 'Producto no encontrado' });
-                    }
-
-                    // Asegúrate de que todos los campos necesarios estén presentes
-                    if (producto.isComposite === undefined) {
-                        producto.isComposite = false; // O cualquier valor predeterminado apropiado
-                    }
-
-                    producto.img = url;
-                    await producto.save();
-                    break;
-                default:
-                    return res.status(400).json({ error: 'Tipo no válido' });
+            empresa.img = url[0];
+            await empresa.save();
+            break;
+          case 'productos':
+            const producto = await Product.findById(id);
+            urlImagenActual = producto ? producto.img : null;
+            if (!producto) {
+              return res.status(404).json({ error: 'Producto no encontrado' });
             }
 
-            const bucketUrl = "https://poscconor.s3.us-east-2.amazonaws.com/";
-            const keyImagenActual = urlImagenActual ? urlImagenActual.replace(bucketUrl, '') : null;
-
-            // Después de cargar la nueva imagen y actualizar la base de datos
-            if (keyImagenActual) {
-                await eliminarImagenS3('poscconor', keyImagenActual);
+            if (producto.isComposite === undefined) {
+              producto.isComposite = false;
             }
 
-            return res.status(200).json({
-                mensaje: 'Archivo subido y URL actualizada con éxito',
-                url: url
-            });
-
-        } catch (dbError) {
-            return res.status(500).json({ error: 'Error al actualizar la base de datos', dbError });
+            producto.img = url[0];
+            await producto.save();
+            break;
+          default:
+            return res.status(400).json({ error: 'Tipo no válido' });
         }
-    });
+
+        if (urlImagenActual) {
+          const keyImagenActual = urlImagenActual.split('/').pop();
+          await eliminarImagenFirebase(`img/${tipo}/${id}/${keyImagenActual}`);
+        }
+
+        return res.status(200).json({
+          mensaje: 'Archivo subido y URL actualizada con éxito',
+          url: url[0]
+        });
+      });
+
+      stream.end(req.file.buffer);
+
+    } catch (dbError) {
+      return res.status(500).json({ error: 'Error al actualizar la base de datos', dbError });
+    }
+  });
 };
 
-const eliminarImagenS3 = async (bucket: string, key: string) => {
-    const deleteParams = {
-        Bucket: bucket,
-        Key: key,
-    };
+const eliminarImagenFirebase = async (key: string) => {
     try {
-        await s3.send(new DeleteObjectCommand(deleteParams));
+        const file = bucket.file(key);
+        await file.delete();
         console.log(`Archivo ${key} eliminado con éxito`);
     } catch (err) {
         console.error("Error al eliminar archivo:", err);
