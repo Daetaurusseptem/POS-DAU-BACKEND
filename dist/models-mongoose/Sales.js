@@ -63,6 +63,18 @@ const saleSchema = new mongoose_1.Schema({
                 type: Number,
                 required: true,
             },
+            modifications: [
+                {
+                    name: {
+                        type: String,
+                        required: true,
+                    },
+                    extraPrice: {
+                        type: Number,
+                        required: true,
+                    },
+                },
+            ],
         },
     ],
     paymentMethod: {

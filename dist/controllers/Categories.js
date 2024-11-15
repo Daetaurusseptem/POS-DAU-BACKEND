@@ -32,7 +32,6 @@ const createCategory = (req, res) => __awaiter(void 0, void 0, void 0, function*
         res.status(201).json(category);
     }
     catch (error) {
-        console.log(error);
         res.status(400).json({ message: 'La categoria ya existe o no es valida' });
     }
 });
@@ -111,7 +110,6 @@ const getCategoryById = (req, res) => __awaiter(void 0, void 0, void 0, function
 exports.getCategoryById = getCategoryById;
 const updateCategory = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log('CATEGORIA: ', req.body);
         const category = yield Category_1.default.findByIdAndUpdate(req.params.id, req.body, { new: true });
         if (!category) {
             return res.status(404).json({ message: 'Category not found' });

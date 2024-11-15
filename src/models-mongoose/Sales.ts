@@ -10,6 +10,10 @@ export interface SaleDocument extends Document {
     quantity: number;
     unitPrice: number;
     subtotal: number;
+    modifications?: {
+      name: string;
+      extraPrice: number;
+    }[];
   }[];
   paymentMethod: 'cash' | 'credit';
   paymentReference?: string;
@@ -46,7 +50,7 @@ const saleSchema = new Schema<SaleDocument>({
       },
       quantity: {
         type: Number,
-        required: true, 
+        required: true,
         min: 1,
       },
       unitPrice: {
@@ -57,6 +61,18 @@ const saleSchema = new Schema<SaleDocument>({
         type: Number,
         required: true,
       },
+      modifications: [
+        {
+          name: {
+            type: String,
+            required: true,
+          },
+          extraPrice: {
+            type: Number,
+            required: true,
+          },
+        },
+      ],
     },
   ],
   paymentMethod: {

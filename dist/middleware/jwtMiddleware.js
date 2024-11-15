@@ -56,7 +56,6 @@ const validarAdminOrSysAdmin = (req, resp, next) => __awaiter(void 0, void 0, vo
         next();
     }
     catch (error) {
-        console.log(error);
         resp.status(500).json({
             ok: false,
             msg: 'Hable con el administrador'
@@ -93,7 +92,6 @@ exports.validarSysAdmin = validarSysAdmin;
 const validarAdmin = (req, resp, next) => __awaiter(void 0, void 0, void 0, function* () {
     const uid = req.uid;
     try {
-        console.log(uid);
         const usuarioDB = yield User_1.default.findById(uid);
         if (!usuarioDB) {
             return resp.status(404).json({
@@ -110,7 +108,6 @@ const validarAdmin = (req, resp, next) => __awaiter(void 0, void 0, void 0, func
         next();
     }
     catch (error) {
-        console.log(error);
         resp.status(500).json({
             ok: false,
             msg: 'Hable con el administrador'
@@ -145,7 +142,6 @@ const validarUserCompany = (req, resp, next) => __awaiter(void 0, void 0, void 0
         next();
     }
     catch (error) {
-        console.log(error);
         resp.status(500).json({
             ok: false,
             msg: 'Hable con el administrador'
@@ -183,7 +179,6 @@ const validarAdminCompany = (req, resp, next) => __awaiter(void 0, void 0, void 
         next();
     }
     catch (error) {
-        console.log(error);
         resp.status(500).json({
             ok: false,
             msg: 'Hable con el administrador'
@@ -211,8 +206,6 @@ const validarEmpresaUsuario = (req, res, next) => __awaiter(void 0, void 0, void
             });
         }
         const empresaDB = yield Company_1.default.findById(empresaId);
-        console.log('usuario: ', usuarioDB);
-        console.log('empresa: ', empresaDB);
         if (!empresaDB || !usuarioDB.companyId == empresaId) {
             return res.status(403).json({
                 ok: false,

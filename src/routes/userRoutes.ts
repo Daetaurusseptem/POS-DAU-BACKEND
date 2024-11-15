@@ -35,7 +35,7 @@ router.get('/company/sysadmin/:companyId', [verifyToken, validarAdminOrSysAdmin]
 // Rutas dinámicas para acciones específicas de un usuario
 router.get('/:id', verifyToken, validarSysAdmin, getUserById);
 router.get('/company/solo/:id', verifyToken, validarAdmin,validarAdminCompany, getUserByIdSoloAdmin);
-router.post('/',verifyToken, createUser);
+router.post('/', createUser);
 router.put('/:id', verifyToken,[verifyToken, validarAdminCompany, validarAdminOrSysAdmin], updateUser);
 
 // sysadmin
@@ -44,3 +44,4 @@ router.delete('/:id', verifyToken, validarSysAdmin, deleteUser);
 router.delete('/admin/:companyId/:id', verifyToken, validarAdminCompany, deleteUser);
 
 export default router;
+ 

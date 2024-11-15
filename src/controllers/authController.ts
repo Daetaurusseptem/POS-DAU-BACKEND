@@ -73,8 +73,7 @@ export const renewToken = async (req: any, resp: Response) => {
     }
 
     const company = await Empresa.findOne({ adminId: uid })
-    console.log('Empresa: ',company);
-    console.log('AdminId: ',uid);
+  
 
 
 

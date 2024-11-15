@@ -14,14 +14,15 @@ import {
   getAllItemsOfCompanyForSysadmin
 } from '../controllers/itemsController';
 import { validarEmpresaUsuario, validarUserCompany, verifyToken, validarSysAdmin, validarAdminOrSysAdmin } from '../middleware/jwtMiddleware';
+import { getAllNonAdminUsersOfCompany } from '../controllers/users';
 
 const router = express.Router();
 
 router.post('/:empresaId', createItem);
 router.get('/:empresaId', verifyToken, validarEmpresaUsuario, getItems);
 router.get('/', getAllItems);
-router.get('/company/:companyId', getAllCompanyItemsPagination);
-router.get('/company/sysadmin/:companyId', [verifyToken, validarAdminOrSysAdmin], getAllCompanyItemsPagination);
+router.get('/company/:companyId', verifyToken, getAllCompanyItemsPagination);
+router.get('/company/:adminId', [verifyToken, validarAdminOrSysAdmin], getAllNonAdminUsersOfCompany);
 router.get('/item/:id', getItemById);
 router.put('/:id', updateItem);
 router.delete('/:id', deleteItem);

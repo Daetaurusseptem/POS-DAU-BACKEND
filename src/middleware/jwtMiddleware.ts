@@ -59,7 +59,7 @@ export const validarAdminOrSysAdmin = async(req:any, resp:Response, next:any)  =
 
 
     } catch (error) {
-        console.log(error);
+        
         resp.status(500).json({
             ok: false,
             msg: 'Hable con el administrador'
@@ -105,7 +105,7 @@ export const validarAdmin = async(req:any, resp:Response, next:any)  => {
     const uid = req.uid;
     
     try {
-        console.log(uid);
+        
         const usuarioDB = await User.findById(uid );
 
         if ( !usuarioDB ) {
@@ -126,7 +126,7 @@ export const validarAdmin = async(req:any, resp:Response, next:any)  => {
 
 
     } catch (error) {
-        console.log(error);
+         
         resp.status(500).json({
             ok: false,
             msg: 'Hable con el administrador'
@@ -169,7 +169,7 @@ export const validarUserCompany = async(req:any, resp:Response, next:any)  => {
 
 
     } catch (error) {
-        console.log(error);
+         
         resp.status(500).json({
             ok: false,
             msg: 'Hable con el administrador'
@@ -216,7 +216,7 @@ export const validarAdminCompany = async(req:any, resp:Response, next:any)  => {
 
 
     } catch (error) {
-        console.log(error);
+         
         resp.status(500).json({
             ok: false,
             msg: 'Hable con el administrador'
@@ -249,8 +249,7 @@ export const validarEmpresaUsuario = async (req: any, res: Response, next: NextF
             });
         }
         const empresaDB = await Empresa.findById(empresaId);
-        console.log('usuario: ',usuarioDB);
-        console.log('empresa: ',empresaDB);
+        
 
         if (!empresaDB || !usuarioDB.companyId==empresaId) {
             return res.status(403).json({

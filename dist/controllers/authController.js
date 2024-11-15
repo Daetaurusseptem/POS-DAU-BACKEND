@@ -62,8 +62,6 @@ const renewToken = (req, resp) => __awaiter(void 0, void 0, void 0, function* ()
         });
     }
     const company = yield Company_1.default.findOne({ adminId: uid });
-    console.log('Empresa: ', company);
-    console.log('AdminId: ', uid);
     return resp.status(200).json({
         ok: true,
         token,

@@ -15,7 +15,6 @@ export const createSupplier = async (req: Request, res: Response) => {
         const company = await Empresa.findById(companyId);
 
         if (!company) {
-            console.log(company);
             return res.status(404).json({ message: 'Empresa no encontrada' });
         }
 

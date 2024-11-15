@@ -35,7 +35,6 @@ class Server {
     constructor() {
         this.app = (0, express_1.default)();
         this.connectToDatabase();
-        this.connectToAwsS3();
         this.port = parseInt(process.env.PORT || '3000', 10);
         this.config();
         this.routes();
@@ -77,7 +76,6 @@ class Server {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 require('../config/db');
-                console.log('Connection has been established successfully.');
             }
             catch (error) {
                 console.error('Unable to connect to the database:', error);
@@ -86,7 +84,6 @@ class Server {
     }
     start() {
         this.app.listen(this.port, '0.0.0.0', () => {
-            console.log(`Servidor escuchando en el puerto ${this.port}`);
         });
     }
 }

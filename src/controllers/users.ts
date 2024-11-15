@@ -50,6 +50,7 @@ export const getNumberUsers = async (req: Request, res: Response) => {
 
 export const getAllNonAdminUsersOfCompany = async (req: Request, res: Response) => {
   const adminId = req.params.adminId;
+  const { page = 1, limit = 10, search = '' } = req.query;
 
   try {
     // Encuentra la empresa basada en adminId
@@ -58,24 +59,45 @@ export const getAllNonAdminUsersOfCompany = async (req: Request, res: Response) 
       return res.status(404).send('Empresa no encontrada.');
     }
 
-    // Encuentra todos los usuarios de la empresa, excluyendo al administrador
-    const users = await User.find({ companyId: company._id, _id: { $ne: adminId } }).exec();
-    res.status(200).json({ok:true,users});
+    // Configuración de paginación y búsqueda
+    const pageNumber = parseInt(page as string) > 0 ? parseInt(page as string) : 1;
+    const limitNumber = parseInt(limit as string) > 0 ? parseInt(limit as string) : 10;
+    const skip = (pageNumber - 1) * limitNumber;
+
+    // Filtrar usuarios por compañía y por término de búsqueda, excluyendo al admin
+    const query = {
+      companyId: company._id,
+      _id: { $ne: adminId },
+      name: { $regex: search, $options: 'i' } // Buscar por nombre, insensible a mayúsculas
+    };
+
+    // Obtener los usuarios paginados y contar el total
+    const users = await User.find(query)
+      .skip(skip)
+      .limit(limitNumber)
+      .exec();
+    const totalUsers = await User.countDocuments(query);
+
+    res.status(200).json({
+      ok: true,
+      users,
+      currentPage: pageNumber,
+      totalPages: Math.ceil(totalUsers / limitNumber),
+      totalUsers
+    });
   } catch (error) {
     console.error('Error al obtener usuarios de la empresa:', error);
-    res.status(500).json({ok:false, message:`error:${error}`});
+    res.status(500).json({ ok: false, message: `Error: ${error}` });
   }
 };
-
 export const getAllUsersOfCompany = async (req: Request, res: Response) => {
   const companyId = req.params.companyId;
-  //console.log(companyId);
 
   try {
 
     // Encuentra todos los usuarios de la empresa, excluyendo al administrador
     const users = await User.find({ companyId });
-    console.log(users);
+    
     res.status(200).json({ok:true,users});
   } catch (error) {
     console.error('Error al obtener usuarios de la empresa:', error);
@@ -104,7 +126,7 @@ export const  getCompanyAdmin = async (req:Request, res:Response) => {
     const {adminId} = req.params
     // Obtener todos los IDs de administradores de empresas
     const company = await Company.findOne({adminId:adminId})
-    console.log(company);
+    
     if(!company){
       return res.status(404).json({
         ok:false,

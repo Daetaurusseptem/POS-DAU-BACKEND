@@ -34,7 +34,6 @@ export const getIngredientByCompanyId = async (req: Request, res: Response) => {
 
       
       const ingredients = await Ingredient.find({ company: companyId })
-      console.log(ingredients);
 
       res.status(200).json({ok:true, ingredients});
     } catch (error) {

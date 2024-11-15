@@ -108,7 +108,7 @@ const eliminarImagenFirebase = async (key: string) => {
     try {
         const file = bucket.file(key);
         await file.delete();
-        console.log(`Archivo ${key} eliminado con éxito`);
+        
     } catch (err) {
         console.error("Error al eliminar archivo:", err);
     }

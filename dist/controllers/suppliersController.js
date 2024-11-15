@@ -35,7 +35,6 @@ const createSupplier = (req, res) => __awaiter(void 0, void 0, void 0, function*
         // Verificar si la empresa existe
         const company = yield Company_1.default.findById(companyId);
         if (!company) {
-            console.log(company);
             return res.status(404).json({ message: 'Empresa no encontrada' });
         }
         const newSupplier = new Supplier_1.default(Object.assign(Object.assign({}, supplierData), { company: companyId }));

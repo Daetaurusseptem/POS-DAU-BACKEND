@@ -2,13 +2,13 @@ import { Request, Response } from 'express';
 import CashRegister from '../models-mongoose/CashRegister';
 import Sale from '../models-mongoose/Sales';
 import User from '../models-mongoose/User';
+import moment from 'moment';
 
 // Registrar el dinero inicial y abrir caja
 export const openCashRegister = async (req: Request, res: Response) => {
   try {
     const { user, initialAmount } = req.body;
-    console.log(user);
-    console.log(initialAmount);
+    
     const newCashRegister = new CashRegister({
       user,
       initialAmount,
@@ -140,35 +140,41 @@ export const getOpenCashRegister = async (req: Request, res: Response) => {
   }
 };
 
+
 export const getUserCashRegistersByStartDate = async (req: Request, res: Response) => {
   try {
-      const { userId } = req.params;
-      const { startDate } = req.query;
+    const { userId, startDate } = req.params;
 
-      const userDb = await User.findById(userId);
-      if(!userDb) {
-        return res.status(404).json({ message: 'Usuario no encontrado' });
-      }
+    if (!startDate) {
+      return res.status(400).json({ message: 'fecha es requerido' });
+    }
 
-      if (!startDate) {
-          return res.status(400).json({ message: 'startDate es requerido' });
-      }
+    // Verificar si el usuario existe en la base de datos
+    const userDb = await User.findById(userId);
+    if (!userDb) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
 
-      const start = new Date(startDate as string);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(startDate as string);
-      end.setHours(23, 59, 59, 999);
+    // Convertir la fecha recibida en formato adecuado (inicio y fin del día)
+    const start = moment.utc(startDate).startOf('day').toDate(); // Inicia el día en UTC
+    const end = moment.utc(startDate).endOf('day').toDate(); // Termina el día en UTC
 
-      const cashRegisters = await CashRegister.find({
-          user: userId,
-          startDate: { $gte: start, $lte: end }
-      })
+    // Buscar las cajas abiertas en la fecha especificada
+    const cashRegisters = await CashRegister.find({
+      user: userId,
+      startDate: { $gte: start, $lte: end }
+    })
       .populate('user')
       .populate('sales');
 
-      res.status(200).json(cashRegisters);
+    if (cashRegisters.length === 0) {
+      return res.status(200).json({ ok: true, cajas: [] });
+    }
+
+    res.status(200).json({ ok: true, cajas: cashRegisters });
   } catch (error) {
-      res.status(500).json({ message: 'Error al obtener las cajas', error });
+    console.error('Error al obtener las cajas:', error);
+    res.status(500).json({ message: 'Error al obtener las cajas', error });
   }
 };
 export const getSalesByCashRegister = async (req: Request, res: Response) => {
@@ -186,4 +192,50 @@ export const getSalesByCashRegister = async (req: Request, res: Response) => {
   } catch (error) {
       res.status(500).json({ message: 'Error al obtener las ventas', error });
   }
+
+  
 };
+
+export const getUserCajasByDate = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+
+    const userDb = await User.findById(userId);
+    if (!userDb) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    // Encontrar las cajas abiertas del usuario y obtener solo las fechas
+    const cajas = await CashRegister.find({ user: userId }).select('startDate');
+    const fechas = Array.from(new Set(cajas.map(caja => caja.startDate.toISOString().split('T')[0]))); // Agrupar por fechas
+
+    return res.status(200).json({ fechas });
+  } catch (error) {
+    return res.status(500).json({ message: 'Error al obtener las fechas de cajas abiertas', error });
+  }
+};
+export const getCajaDetailsById = async (req: Request, res: Response) => {
+  try {
+    const { cajaId } = req.params;
+    console.log(cajaId);
+    
+    const cashRegister = await CashRegister.findById(cajaId)
+      .populate('user') // Popula el usuario asociado a la caja
+      .populate({
+        path: 'sales', // Popula las ventas relacionadas
+        populate: {
+          path: 'productsSold.product', // Popula los detalles de cada producto vendido en las ventas
+          model: 'Product', // Asegúrate de usar el nombre del modelo correcto aquí
+        }
+      });
+
+    if (!cashRegister) {
+      return res.status(404).json({ message: 'Caja no encontrada' });
+    }
+
+    return res.status(200).json({ ok: true, caja: cashRegister });
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener los detalles de la caja', error });
+  }
+};
+

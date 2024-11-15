@@ -109,7 +109,6 @@ const eliminarImagenFirebase = (key) => __awaiter(void 0, void 0, void 0, functi
     try {
         const file = firebase_1.bucket.file(key);
         yield file.delete();
-        console.log(`Archivo ${key} eliminado con éxito`);
     }
     catch (err) {
         console.error("Error al eliminar archivo:", err);

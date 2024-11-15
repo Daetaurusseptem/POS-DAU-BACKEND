@@ -11,7 +11,7 @@ export const getMenuFrontEnd = (role = 'admin') => {
   if (role === 'admin') {
     menu[0].title = 'ADMIN TOOLS';
     menu[0].id = 'admin';
-    menu[0].icon = 'bi bi-cone-striped';
+    menu[0].icon = 'bi bi-list';
     menu[0].submenu.unshift(
       //{ title: 'Empresa', url: 'admin/company', icon: 'bi bi-building-fill' },
       { title: 'Home', url: 'admin', icon: 'bi bi-house-fill' },

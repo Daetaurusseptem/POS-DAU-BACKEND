@@ -57,29 +57,48 @@ const getNumberUsers = (req, res) => __awaiter(void 0, void 0, void 0, function*
 exports.getNumberUsers = getNumberUsers;
 const getAllNonAdminUsersOfCompany = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const adminId = req.params.adminId;
+    const { page = 1, limit = 10, search = '' } = req.query;
     try {
         // Encuentra la empresa basada en adminId
         const company = yield Company_1.default.findOne({ adminId }).exec();
         if (!company) {
             return res.status(404).send('Empresa no encontrada.');
         }
-        // Encuentra todos los usuarios de la empresa, excluyendo al administrador
-        const users = yield User_1.default.find({ companyId: company._id, _id: { $ne: adminId } }).exec();
-        res.status(200).json({ ok: true, users });
+        // Configuración de paginación y búsqueda
+        const pageNumber = parseInt(page) > 0 ? parseInt(page) : 1;
+        const limitNumber = parseInt(limit) > 0 ? parseInt(limit) : 10;
+        const skip = (pageNumber - 1) * limitNumber;
+        // Filtrar usuarios por compañía y por término de búsqueda, excluyendo al admin
+        const query = {
+            companyId: company._id,
+            _id: { $ne: adminId },
+            name: { $regex: search, $options: 'i' } // Buscar por nombre, insensible a mayúsculas
+        };
+        // Obtener los usuarios paginados y contar el total
+        const users = yield User_1.default.find(query)
+            .skip(skip)
+            .limit(limitNumber)
+            .exec();
+        const totalUsers = yield User_1.default.countDocuments(query);
+        res.status(200).json({
+            ok: true,
+            users,
+            currentPage: pageNumber,
+            totalPages: Math.ceil(totalUsers / limitNumber),
+            totalUsers
+        });
     }
     catch (error) {
         console.error('Error al obtener usuarios de la empresa:', error);
-        res.status(500).json({ ok: false, message: `error:${error}` });
+        res.status(500).json({ ok: false, message: `Error: ${error}` });
     }
 });
 exports.getAllNonAdminUsersOfCompany = getAllNonAdminUsersOfCompany;
 const getAllUsersOfCompany = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const companyId = req.params.companyId;
-    //console.log(companyId);
     try {
         // Encuentra todos los usuarios de la empresa, excluyendo al administrador
         const users = yield User_1.default.find({ companyId });
-        console.log(users);
         res.status(200).json({ ok: true, users });
     }
     catch (error) {
@@ -109,7 +128,6 @@ const getCompanyAdmin = (req, res) => __awaiter(void 0, void 0, void 0, function
         const { adminId } = req.params;
         // Obtener todos los IDs de administradores de empresas
         const company = yield Company_1.default.findOne({ adminId: adminId });
-        console.log(company);
         if (!company) {
             return res.status(404).json({
                 ok: false,

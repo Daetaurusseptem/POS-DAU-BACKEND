@@ -24,7 +24,6 @@ export const createCategory = async (req: Request, res: Response) => {
         await category.save();
         res.status(201).json(category);
     } catch (error) {
-        console.log(error);
         res.status(400).json({ message: 'La categoria ya existe o no es valida' });
     }
 };
@@ -100,7 +99,7 @@ export const getCategoryById = async (req: Request, res: Response) => {
 
 export const updateCategory = async (req: Request, res: Response) => {
     try {
-        console.log('CATEGORIA: ',req.body);
+      
         const category = await Category.findByIdAndUpdate(req.params.id, req.body, { new: true });
         if (!category) {
             return res.status(404).json({ message: 'Category not found' });

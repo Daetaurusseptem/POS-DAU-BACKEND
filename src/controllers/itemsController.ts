@@ -11,7 +11,7 @@ import Ingredient from '../models-mongoose/Ingredient';
 // Crear un nuevo Item
 export const createItem = async (req: Request, res: Response) => {
     try {
-        console.log('crear item', req.body);
+        
         const product = req.body.product
         const {empresaId} = req.params
         const producto=await Product.findById(product)
@@ -44,7 +44,7 @@ export const createItem = async (req: Request, res: Response) => {
           item:savedItem
         });
     } catch (error) {
-        console.log(error);
+         
         return res.status(400).json(error);
     }
 };
@@ -76,7 +76,7 @@ export const getAllCompanyItems = async (req: Request, res: Response) => {
 export const getAllItemsOfCompanyForSysadmin = async (req: Request, res: Response) => {
   try {
     const { companyId } = req.params;
-    console.log('CompanyId: ', companyId);
+    
     const company = await Empresa.findById(companyId);
     if (!company) {
       return res.status(404).json({ message: 'Empresa no encontrada' });
@@ -90,49 +90,57 @@ export const getAllItemsOfCompanyForSysadmin = async (req: Request, res: Respons
 };
 
 export const getAllCompanyItemsPagination = async (req: Request, res: Response): Promise<Response> => {
-    try {
-        // Parámetros de paginación con valores por defecto
+  try {
+      // Parámetros de paginación con valores por defecto
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 5;
 
-        
-        const page = parseInt(req.query.page as string) || 1;
-        const limit = parseInt(req.query.limit as string) || 5;
+      // Calcular el desplazamiento
+      const skip = (page - 1) * limit;
 
-        // Calcular el desplazamiento
-        const skip = (page - 1) * limit;
-        const {companyId} = req.params
-        const company = await Empresa.findById(companyId);
-        if (!company) {
+      // Obtener el companyId desde los parámetros de la solicitud
+      const { companyId } = req.params;
+
+      // Verificar si la empresa existe
+      const company = await Empresa.findById(companyId);
+      if (!company) {
           return res.status(404).json({ message: 'Empresa no existe' });
-        }
-        // Obtener datos paginados
-        const items = await Item.find({company:companyId}).skip(skip).limit(limit);
+      }
 
-        // Contar el total de documentos para calcular el total de páginas
-        const total = await Item.countDocuments();
-        const totalPages = Math.ceil(total / limit);
+      // Obtener los items de la empresa con paginación
+      const items = await Item.find({ company: companyId })
+          .populate('product')
+          .skip(skip)
+          .limit(limit);
 
-        // Devolver resultados paginados
-        return res.status(200).json({
-            totalPages,
-            page,
-            limit,
-            items
-        });
-    } catch (error) {
-        console.error('Error al obtener las empresas:', error);
-        return res.status(500).json({ error: 'Error al obtener las empresas' });
-    }
+      // Contar el total de documentos para la empresa específica
+      const total = await Item.countDocuments({ company: companyId });
+      const totalPages = Math.ceil(total / limit);
+
+      // Devolver resultados paginados
+      return res.status(200).json({
+          totalItems: total,
+          totalPages,
+          currentPage: page,
+          itemsPerPage: limit,
+          items,
+      });
+  } catch (error) {
+      console.error('Error al obtener los items de la empresa:', error);
+      return res.status(500).json({ error: 'Error al obtener los items de la empresa' });
+  }
 };
+
 
 // Obtener un Item por ID
 export const getItemById = async (req: Request, res: Response) => {
     try {
         const item = await Item.findById(req.params.id);
         if (!item) {return res.status(404).json({ message: 'Item no encontrado' })};
-        console.log(item);
+        
         return res.status(200).json({ok:true, item});
     } catch (error) {
-      console.log(error);
+       
         return res.status(500).json({ message: error });
     }
 };
@@ -153,28 +161,28 @@ export const deleteItem = async (req: Request, res: Response) => {
     try {
         const deletedItem = await Item.findByIdAndDelete(req.params.id);
         if (!deletedItem) return res.status(404).json({ message: 'Item no encontrado' });
-        res.status(200).json({ message: 'Item eliminado' });
+        res.status(200).json({ ok:true, message: 'Item eliminado' });
     } catch (error) {
-        res.status(500).json({ message: error });
+        res.status(500).json({ ok:false,message: error });
     }
 };
-
+  
 
 export const getItems = async (req: Request, res: Response) => {
-    try {
+    try { 
       const { empresaId } = req.params;
       const { page = 1, size = 20, name } = req.query;
       const pageNumber = parseInt(page as string, 10) || 1;
       const pageSize = parseInt(size as string, 10) || 20;
       const searchTerm = name ? (name as string) : '';
-      console.log(searchTerm);
+      
   
       const query = {
         company: empresaId,
         ...(searchTerm && { name: { $regex: new RegExp(searchTerm, 'i') } })
       };
   
-      const items = await Item.find(query)
+      const items = await Item.find(query) 
         .populate('product')
         .skip((pageNumber - 1) * pageSize)
         .limit(pageSize)
@@ -195,36 +203,55 @@ export const getItems = async (req: Request, res: Response) => {
 
   export const getItemsByCategory = async (req: Request, res: Response) => {
     try {
+      const { companyId } = req.params;
       const { category, search = '', page = 1, limit = 10 } = req.query;
-      console.log(category, search, page, limit);
   
-      if (!category) {
-        return res.status(400).json({ message: 'Category is required' });
+      // Validar parámetros obligatorios
+      if (!category && !search) {
+        return res.status(400).json({ message: 'Either category or search term must be provided' });
+      }
+  
+      if (!companyId) {
+        return res.status(400).json({ message: 'Company ID is required' });
       }
   
       // Construir la consulta para buscar productos
-      const query = {
-        categories: { $in: [category] },
-        ...(search && { name: { $regex: search, $options: 'i' } })
+      const query: any = {
+        company: companyId,
       };
   
-      // Buscar productos por categoría y término de búsqueda
+      if (category) {
+        query.categories = { $in: [category] };
+      }
+  
+      if (search) {
+        query.name = { $regex: search, $options: 'i' };
+      }
+  
+      // Buscar productos por categoría, compañía y término de búsqueda
       const products = await Product.find(query);
+  
+      // Verificar si se encontraron productos
+      if (!products.length) {
+        return res.status(404).json({ message: 'No products found for the provided filters' });
+      }
   
       // Obtener los IDs de los productos encontrados
       const productIds = products.map(product => product._id);
   
-      // Calcular el total de ítems
-      const totalItems = await Item.countDocuments({ product: { $in: productIds }, stock: { $gt: 0 } });
+      // Calcular el total de ítems disponibles en stock
+      const totalItems = await Item.countDocuments({ product: { $in: productIds }, stock: { $gt: 0 }, company: companyId });
+  
+      if (totalItems === 0) {
+        return res.status(404).json({ message: 'No items in stock for the provided filters' });
+      }
   
       // Buscar ítems que correspondan a los productos encontrados con paginación
-      const items = await Item.find({ product: { $in: productIds }, stock: { $gt: 0 } })
+      const items = await Item.find({ product: { $in: productIds }, stock: { $gt: 0 }, company: companyId })
         .populate('product')
         .populate('company')
         .skip((Number(page) - 1) * Number(limit))
         .limit(Number(limit));
-  
-      console.log(items);
   
       res.status(200).json({
         items,
@@ -233,10 +260,11 @@ export const getItems = async (req: Request, res: Response) => {
         currentPage: Number(page)
       });
     } catch (error) {
-      console.log(error);
+      console.error('Error fetching items:', error);
       res.status(500).json({ message: 'Error fetching items', error });
     }
   };
+  
   
   
 

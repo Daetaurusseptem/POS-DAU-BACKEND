@@ -20,6 +20,7 @@ const Item_1 = __importDefault(require("../models-mongoose/Item"));
 const recipes_1 = __importDefault(require("../models-mongoose/recipes"));
 const Ingredient_1 = __importDefault(require("../models-mongoose/Ingredient"));
 const User_1 = __importDefault(require("../models-mongoose/User"));
+const Products_1 = __importDefault(require("../models-mongoose/Products")); // Importar el modelo Product para acceder a sus campos
 // Obtener todas las ventas
 const getAllSales = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -44,16 +45,18 @@ const getSaleById = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.getSaleById = getSaleById;
+// Función para deducir el stock de un ítem simple
 const deductStockForSimpleItem = (itemId, quantity) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(itemId, quantity);
     const item = yield Item_1.default.findById(itemId);
     if (!item)
-        throw new Error('Item not found');
+        throw new Error('Item not found aca');
     item.stock -= quantity;
     if (item.stock < 0)
         throw new Error(`Not enough stock for item ${item.name}`);
     yield item.save();
 });
+// Función para deducir ingredientes para un ítem compuesto
+// Función para deducir ingredientes para un ítem compuesto
 const deductIngredientsForCompositeItem = (recipeId, quantity) => __awaiter(void 0, void 0, void 0, function* () {
     const recipe = yield recipes_1.default.findById(recipeId).populate('ingredients.ingredient');
     if (!recipe)
@@ -68,26 +71,33 @@ const deductIngredientsForCompositeItem = (recipeId, quantity) => __awaiter(void
         yield ingredient.save();
     }
 });
+// Procesar la venta y actualizar el inventario
 const processSale = (productsSold) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(productsSold);
     for (const productSold of productsSold) {
-        const item = yield Item_1.default.findById(productSold._id).populate('product');
+        // Utilizar el ID del producto que ahora se garantiza que estará presente
+        const item = yield Item_1.default.findOne({ product: productSold.product }).populate('product');
         if (!item)
-            throw new Error('Item not found');
-        if (item.product.isComposite) {
-            if (!item.product.recipe)
+            throw new Error('Item not found qui');
+        // Buscar el producto para verificar si es compuesto
+        const product = yield Products_1.default.findById(item.product._id);
+        if (!product)
+            throw new Error('Product not found');
+        // Verificar si el producto es compuesto y deducir los ingredientes si es necesario
+        if (product.isComposite) {
+            if (!product.recipe)
                 throw new Error('Composite product does not have a recipe');
-            yield deductIngredientsForCompositeItem(item.product.recipe, productSold.quantity);
+            yield deductIngredientsForCompositeItem(product.recipe, productSold.quantity);
         }
         else {
-            yield deductStockForSimpleItem(item._id, productSold.quantity);
+            // Deducir el stock del ítem simple 
+            yield deductStockForSimpleItem(item._id.toString(), productSold.quantity);
         }
     }
 });
+// Crear una venta
 const createSale = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { user, total, discount, productsSold, paymentMethod, receivedAmount, change, paymentReference } = req.body;
-        console.log(user, total, discount, productsSold, paymentMethod, receivedAmount, change, paymentReference);
         // Obtener la caja abierta del usuario
         const cashRegister = yield CashRegister_1.default.findOne({ user, closed: false });
         if (!cashRegister) {
@@ -102,19 +112,37 @@ const createSale = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         if (!companyId) {
             return res.status(400).json({ message: 'User does not belong to any company' });
         }
-        console.log(companyId);
         // Procesar la venta y actualizar el inventario
         yield processSale(productsSold);
-        // Crear una nueva venta
+        // Crear una nueva venta con los datos proporcionados
         const newSaleData = {
             user,
             total,
             discount,
-            productsSold,
+            productsSold: productsSold.map((product) => {
+                // Calcular el subtotal del producto considerando las modificaciones
+                let subtotal = product.unitPrice * product.quantity;
+                if (product.modifications && product.modifications.length > 0) {
+                    product.modifications.forEach((mod) => {
+                        subtotal += mod.extraPrice * product.quantity;
+                    });
+                }
+                return {
+                    product: product.product,
+                    quantity: product.quantity,
+                    unitPrice: product.unitPrice,
+                    subtotal,
+                    modifications: product.modifications.map((mod) => ({
+                        name: mod.name,
+                        extraPrice: mod.extraPrice
+                    }))
+                };
+            }),
             date: new Date(),
             paymentMethod,
             company: companyId
         };
+        // Añadir información adicional según el método de pago
         if (paymentMethod === 'cash') {
             newSaleData.receivedAmount = receivedAmount;
             newSaleData.change = change;
@@ -122,6 +150,7 @@ const createSale = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         else if (paymentMethod === 'credit') {
             newSaleData.paymentReference = paymentReference;
         }
+        // Guardar la nueva venta en la base de datos
         const newSale = new Sales_1.default(newSaleData);
         const savedSale = yield newSale.save();
         // Actualizar los pagos en la caja
@@ -129,7 +158,12 @@ const createSale = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         let creditTotal = 0;
         let debitTotal = 0;
         productsSold.forEach((product) => {
-            const subtotal = parseFloat(product.subtotal); // Asegurar que subtotal es un número
+            let subtotal = product.unitPrice * product.quantity;
+            if (product.modifications && product.modifications.length > 0) {
+                product.modifications.forEach((mod) => {
+                    subtotal += mod.extraPrice * product.quantity;
+                });
+            }
             switch (paymentMethod) {
                 case 'cash':
                     cashTotal += subtotal;
@@ -144,17 +178,16 @@ const createSale = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                     return res.status(400).json({ message: 'Invalid payment method' });
             }
         });
-        // Asegurar que los valores son numéricos antes de sumarlos
         cashRegister.payments.cash += cashTotal;
         cashRegister.payments.credit += creditTotal;
         cashRegister.payments.debit += debitTotal;
         // Agregar la venta a la caja
         cashRegister.sales.push(savedSale._id);
+        // Guardar los cambios en la caja
         yield cashRegister.save();
         return res.status(201).json(savedSale);
     }
     catch (error) {
-        console.log(error);
         return res.status(500).json({ message: 'Error creating sale', error });
     }
 });

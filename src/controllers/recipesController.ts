@@ -87,7 +87,6 @@ export const deleteRecipe = async (req: Request, res: Response) => {
 // Actualizar una receta
 export const updateRecipe = async (req: Request, res: Response) => {
     try {
-        console.log(req.body);
         const updatedRecipe = await Recipe.findByIdAndUpdate(req.params.recipeId, req.body, { new: true });
         if (!updatedRecipe) return res.status(404).json({ message: 'Receta no encontrada' });
         return res.status(200).json(updatedRecipe);

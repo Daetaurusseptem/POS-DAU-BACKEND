@@ -22,7 +22,6 @@ const Ingredient_1 = __importDefault(require("../models-mongoose/Ingredient"));
 // Crear un nuevo Item
 const createItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log('crear item', req.body);
         const product = req.body.product;
         const { empresaId } = req.params;
         const producto = yield Products_1.default.findById(product);
@@ -48,7 +47,6 @@ const createItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         });
     }
     catch (error) {
-        console.log(error);
         return res.status(400).json(error);
     }
 });
@@ -83,7 +81,6 @@ exports.getAllCompanyItems = getAllCompanyItems;
 const getAllItemsOfCompanyForSysadmin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { companyId } = req.params;
-        console.log('CompanyId: ', companyId);
         const company = yield Company_1.default.findById(companyId);
         if (!company) {
             return res.status(404).json({ message: 'Empresa no encontrada' });
@@ -103,27 +100,33 @@ const getAllCompanyItemsPagination = (req, res) => __awaiter(void 0, void 0, voi
         const limit = parseInt(req.query.limit) || 5;
         // Calcular el desplazamiento
         const skip = (page - 1) * limit;
+        // Obtener el companyId desde los parámetros de la solicitud
         const { companyId } = req.params;
+        // Verificar si la empresa existe
         const company = yield Company_1.default.findById(companyId);
         if (!company) {
             return res.status(404).json({ message: 'Empresa no existe' });
         }
-        // Obtener datos paginados
-        const items = yield Item_1.default.find({ company: companyId }).skip(skip).limit(limit);
-        // Contar el total de documentos para calcular el total de páginas
-        const total = yield Item_1.default.countDocuments();
+        // Obtener los items de la empresa con paginación
+        const items = yield Item_1.default.find({ company: companyId })
+            .populate('product')
+            .skip(skip)
+            .limit(limit);
+        // Contar el total de documentos para la empresa específica
+        const total = yield Item_1.default.countDocuments({ company: companyId });
         const totalPages = Math.ceil(total / limit);
         // Devolver resultados paginados
         return res.status(200).json({
+            totalItems: total,
             totalPages,
-            page,
-            limit,
-            items
+            currentPage: page,
+            itemsPerPage: limit,
+            items,
         });
     }
     catch (error) {
-        console.error('Error al obtener las empresas:', error);
-        return res.status(500).json({ error: 'Error al obtener las empresas' });
+        console.error('Error al obtener los items de la empresa:', error);
+        return res.status(500).json({ error: 'Error al obtener los items de la empresa' });
     }
 });
 exports.getAllCompanyItemsPagination = getAllCompanyItemsPagination;
@@ -135,11 +138,9 @@ const getItemById = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             return res.status(404).json({ message: 'Item no encontrado' });
         }
         ;
-        console.log(item);
         return res.status(200).json({ ok: true, item });
     }
     catch (error) {
-        console.log(error);
         return res.status(500).json({ message: error });
     }
 });
@@ -163,10 +164,10 @@ const deleteItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const deletedItem = yield Item_1.default.findByIdAndDelete(req.params.id);
         if (!deletedItem)
             return res.status(404).json({ message: 'Item no encontrado' });
-        res.status(200).json({ message: 'Item eliminado' });
+        res.status(200).json({ ok: true, message: 'Item eliminado' });
     }
     catch (error) {
-        res.status(500).json({ message: error });
+        res.status(500).json({ ok: false, message: error });
     }
 });
 exports.deleteItem = deleteItem;
@@ -177,7 +178,6 @@ const getItems = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const pageNumber = parseInt(page, 10) || 1;
         const pageSize = parseInt(size, 10) || 20;
         const searchTerm = name ? name : '';
-        console.log(searchTerm);
         const query = Object.assign({ company: empresaId }, (searchTerm && { name: { $regex: new RegExp(searchTerm, 'i') } }));
         const items = yield Item_1.default.find(query)
             .populate('product')
@@ -199,26 +199,44 @@ const getItems = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.getItems = getItems;
 const getItemsByCategory = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        const { companyId } = req.params;
         const { category, search = '', page = 1, limit = 10 } = req.query;
-        console.log(category, search, page, limit);
-        if (!category) {
-            return res.status(400).json({ message: 'Category is required' });
+        // Validar parámetros obligatorios
+        if (!category && !search) {
+            return res.status(400).json({ message: 'Either category or search term must be provided' });
+        }
+        if (!companyId) {
+            return res.status(400).json({ message: 'Company ID is required' });
         }
         // Construir la consulta para buscar productos
-        const query = Object.assign({ categories: { $in: [category] } }, (search && { name: { $regex: search, $options: 'i' } }));
-        // Buscar productos por categoría y término de búsqueda
+        const query = {
+            company: companyId,
+        };
+        if (category) {
+            query.categories = { $in: [category] };
+        }
+        if (search) {
+            query.name = { $regex: search, $options: 'i' };
+        }
+        // Buscar productos por categoría, compañía y término de búsqueda
         const products = yield Products_1.default.find(query);
+        // Verificar si se encontraron productos
+        if (!products.length) {
+            return res.status(404).json({ message: 'No products found for the provided filters' });
+        }
         // Obtener los IDs de los productos encontrados
         const productIds = products.map(product => product._id);
-        // Calcular el total de ítems
-        const totalItems = yield Item_1.default.countDocuments({ product: { $in: productIds }, stock: { $gt: 0 } });
+        // Calcular el total de ítems disponibles en stock
+        const totalItems = yield Item_1.default.countDocuments({ product: { $in: productIds }, stock: { $gt: 0 }, company: companyId });
+        if (totalItems === 0) {
+            return res.status(404).json({ message: 'No items in stock for the provided filters' });
+        }
         // Buscar ítems que correspondan a los productos encontrados con paginación
-        const items = yield Item_1.default.find({ product: { $in: productIds }, stock: { $gt: 0 } })
+        const items = yield Item_1.default.find({ product: { $in: productIds }, stock: { $gt: 0 }, company: companyId })
             .populate('product')
             .populate('company')
             .skip((Number(page) - 1) * Number(limit))
             .limit(Number(limit));
-        console.log(items);
         res.status(200).json({
             items,
             totalItems,
@@ -227,7 +245,7 @@ const getItemsByCategory = (req, res) => __awaiter(void 0, void 0, void 0, funct
         });
     }
     catch (error) {
-        console.log(error);
+        console.error('Error fetching items:', error);
         res.status(500).json({ message: 'Error fetching items', error });
     }
 });

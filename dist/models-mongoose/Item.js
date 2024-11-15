@@ -33,6 +33,25 @@ const itemSchema = new mongoose_1.Schema({
     stock: { type: Number, required: true, min: 0 },
     discount: { type: Number, required: true, default: 0, min: 0, max: 100 },
     receivedDate: { type: Date, required: true },
-    expirationDate: { type: Date }
+    expirationDate: { type: Date },
+    modifications: [
+        {
+            name: {
+                type: String,
+                required: true,
+                trim: true,
+            },
+            extraPrice: {
+                type: Number,
+                required: true,
+                min: 0,
+            },
+            isExclusive: {
+                type: Boolean,
+                required: false,
+                default: false,
+            },
+        },
+    ],
 });
 exports.default = mongoose_1.default.model('Item', itemSchema);
