@@ -4,8 +4,8 @@
   "description": "POS CCONOR SOLUCIONES MX, ES UN POS QUE AYUDARA A LOS COMERCIOS LOCALES DE DURANGO A TENER ACCESO A SOFTWARE DE POS DE MANERA ACCESIBLE Y VIABLE",
   "main": "./dist/main.js",
   "scripts": {
-    "dev": "npx nodemon dist/main.js",
-    "wachea": "tsc --watch"
+    "build": "tsc",
+    "start": "node dist/main.js"
   },
   "repository": {
     "type": "git",
