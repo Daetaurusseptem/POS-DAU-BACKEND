@@ -66,7 +66,7 @@ const processSale = async (productsSold: any[]) => {
     
     
     // Buscar el producto para verificar si es compuesto
-    const product = await Product.findById(item.product._id);
+    const product = await Product.findById((item.product as any)._id);
     if (!product) throw new Error('Product not found');
 
     // Verificar si el producto es compuesto y deducir los ingredientes si es necesario
