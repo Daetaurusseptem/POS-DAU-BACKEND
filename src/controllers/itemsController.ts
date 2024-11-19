@@ -297,9 +297,9 @@ export const processSale = async (saleData: any) => {
     const item = await Item.findById(productSold.itemId).populate('product');
     if (!item) throw new Error('Item not found');
 
-    if (item.product.isComposite) {
-      if (!item.product.recipe) throw new Error('Composite product does not have a recipe');
-      await deductIngredientsForCompositeItem(item.product.recipe, productSold.quantity);
+    if ((item.product as any).isComposite) {
+      if ((!item.product as any).recipe ) throw new Error('Composite product does not have a recipe');
+      await deductIngredientsForCompositeItem((item.product as any).recipe, productSold.quantity);
     } else {
       await deductStockForSimpleItem(item._id, productSold.quantity);
     }

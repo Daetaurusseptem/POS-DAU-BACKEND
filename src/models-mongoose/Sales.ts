@@ -6,6 +6,7 @@ export interface SaleDocument extends Document {
   total: number;
   discount: number;
   productsSold: {
+    paymentMethod: any;
     product: mongoose.Types.ObjectId;
     quantity: number;
     unitPrice: number;
